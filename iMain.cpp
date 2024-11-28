@@ -20,6 +20,22 @@ char attack[10][25]={"character\\Attack\\1.bmp","character\\Attack\\2.bmp","char
 char menupage[20]={"UI\\Menu.png"};
 
 
+/*------RUN ANIMATION-----*/
+bool StandPosition = true;
+int StandCounter = 0;
+
+/*----------OBSTACLES---------*/
+struct obstacle {
+    int x;        // X position
+    int y;        // Y position
+    int width;    // Width of obstacle
+    int height;   // Height of obstacle
+    bool active;  // Whether the obstacle is active
+};
+struct obstacle obstacles[5]; 
+
+
+
 struct background
 {
 	int x;
@@ -34,32 +50,55 @@ struct buttonCoordinate
 struct background bc1[50];
 
 int bcIndex=0;
-int charx=0;
-int chary=0;
+int charx=300;
+int chary=55;
 int idleidx=0,runidx=0,jumpidx=0,hurtidx=0,attackidx=0;
+
+// charx = 300; // Update this in iDraw or wherever the character's position is controlled
+// chary = 55;
+
+
+void generateObstacles();
+void moveObstacles();
+void checkCollision();
 
 
 //	function iDraw() is called again and again by the system.
 void iDraw() {
 	iClear();
-	if(gameState==0)
+	if(gameState==0 || gameState==-1)
 	{
 		iShowBMP(0,0,menupage);
+		iText(400, 300, "Press UP to Start the Game", GLUT_BITMAP_TIMES_ROMAN_24);
 	}
 	else
 	{
+		iShowBMP(0,0,stat_back);
 		int i,k,j;
-		for(i=0;i<20;i++)
-		{
-			iShowBMP(bc1[i].x,bc1[i].y,bc[i]);
-		}
+		
 
-		//iShowBMP(0,0,stat_back);
-		iShowBMP2(100,55,run[runidx],0);
-		iShowBMP2(0,55,idle[idleidx],0);
-		iShowBMP2(200,55,jump[jumpidx],0);
-		iShowBMP2(300,55,hurt[hurtidx],0);
-		iShowBMP2(400,55,attack[attackidx],0);
+		if(!StandPosition)
+		{
+			for(i=0;i<20;i++)
+			{
+			iShowBMP(bc1[i].x,bc1[i].y,bc[i]);
+			}
+			iShowBMP2(300,55,run[runidx],0);
+		}
+		else
+		{
+			iShowBMP2(300,55,idle[idleidx],0);
+		}
+		for (int i = 0; i < 5; i++) {
+            if (obstacles[i].active) {
+                iSetColor(255, 0, 0); // Red for obstacles
+                iFilledRectangle(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+            }
+        }
+		
+		// iShowBMP2(200,55,jump[jumpidx],0);
+		// iShowBMP2(300,55,hurt[hurtidx],0);
+		// iShowBMP2(400,55,attack[attackidx],0);
 	}
 }
 
@@ -72,8 +111,49 @@ void setAll()
 		bc1[i].y=0;
 		bc1[i].x=sum;
 		sum+=55;
+		//if(!StandPosition)
+			generateObstacles();  
 	}
 }
+// Function to generate random obstacles
+void generateObstacles() {
+    for (int i = 0; i < 5; i++) {
+        obstacles[i].x = rand() % 1100 + 1100;  // Start position off-screen
+        obstacles[i].y = 55 + rand() % 200;    // Random height on screen
+        obstacles[i].width = 50;              // Fixed width
+        obstacles[i].height = 50 + rand() % 50; // Random height
+        obstacles[i].active = true;
+    }
+}
+
+// Function to move obstacles
+void moveObstacles() {
+    for (int i = 0; i < 5; i++) {
+        if (obstacles[i].active) {
+            obstacles[i].x -= 30;  // Move left
+            if (obstacles[i].x + obstacles[i].width <= 0) {
+                // Reset to new random position off-screen
+                obstacles[i].x = rand() % 1100 + 1100;
+                obstacles[i].y = 55 + rand() % 200;
+                obstacles[i].height = 50 + rand() % 50;
+            }
+        }
+    }
+}
+void checkCollision() {
+    for (int i = 0; i < 5; i++) {
+        if (obstacles[i].active) {
+            // Check if character's bounding box intersects with the obstacle
+            if (charx < obstacles[i].x + obstacles[i].width &&
+                charx + 50 > obstacles[i].x && // Assume character's width = 50
+                chary < obstacles[i].y + obstacles[i].height &&
+                chary + 50 > obstacles[i].y) { // Assume character's height = 50
+                gameState = -1; // Game Over
+            }
+        }
+    }
+}
+
 void change()
 {
 	for(int i=0;i<20;i++)
@@ -87,8 +167,9 @@ void change()
 		{
             bc1[i].x = bc1[(i == 0 ? 19 : i - 1)].x + 55; 
 		}
-
 	}
+	moveObstacles();
+	checkCollision(); 
 }
 
 
@@ -138,6 +219,14 @@ void iSpecialKeyboard(unsigned char key) {
 	{
 		gameState=0;
 	}
+	if(key==GLUT_KEY_RIGHT)
+	{
+		StandPosition= false;
+	}
+	else if(key==GLUT_KEY_LEFT)
+	{
+		StandPosition= true;
+	}
 }
 
 
@@ -169,9 +258,13 @@ void attack_anim()
 	if(attackidx>=10) attackidx=0;
 }
 
-//char musicfile[100]={"C:\\Users\\ramis\\Desktop\\IGraphics VS Project\\Resouces\\music\nightfall-future-bass-music-228100.wav"};
+char musicfile[100]={"Resouces\\music\\nightfall-future-bass-music-228100.wav"};
 int main() {
 	setAll();
+	if(musicOn)
+	{
+		//PlaySound( musicfile , NULL, SND_LOOP | SND_ASYNC);
+	}
 	iSetTimer(100,change);
 	iSetTimer(100,idle_anim);
 	iSetTimer(100,run_anim);
