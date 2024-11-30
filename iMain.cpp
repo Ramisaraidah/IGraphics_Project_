@@ -3,9 +3,10 @@
 #define screenwidth 619
 #define screenlength 1100
 
-
+bool run_state;
 int gameState=0;
 bool musicOn = true;
+int collision_number=0;
 
 /*-----COORDINATES--------*/
 int X=300;
@@ -15,7 +16,8 @@ int Y=55;
 char bc[22][20]={"back-55\\tile000.bmp","back-55\\tile001.bmp","back-55\\tile002.bmp","back-55\\tile003.bmp","back-55\\tile004.bmp","back-55\\tile005.bmp","back-55\\tile006.bmp","back-55\\tile007.bmp","back-55\\tile008.bmp","back-55\\tile009.bmp","back-55\\tile010.bmp","back-55\\tile011.bmp","back-55\\tile012.bmp","back-55\\tile013.bmp","back-55\\tile014.bmp","back-55\\tile015.bmp","back-55\\tile016.bmp","back-55\\tile017.bmp","back-55\\tile018.bmp","back-55\\tile019.bmp"};
 char stat_back[20]={"back.bmp"};
 
-/*----------- Animations of main character--------- */ 
+/*----------- Animations of main character--------- */
+int playerWidth=52, playerHeight=112;
 char idle[6][25]={"character\\Idle\\1.bmp","character\\Idle\\2.bmp","character\\Idle\\3.bmp","character\\Idle\\4.bmp","character\\Idle\\5.bmp","character\\Idle\\6.bmp"};
 char run[8][25]={"character\\Run\\1.bmp","character\\Run\\2.bmp","character\\Run\\3.bmp","character\\Run\\4.bmp","character\\Run\\5.bmp","character\\Run\\6.bmp","character\\Run\\7.bmp","character\\Run\\8.bmp"};
 char jump_sprite[11][25]={"character\\jump\\1.bmp","character\\jump\\2.bmp","character\\jump\\3.bmp","character\\jump\\4.bmp","character\\jump\\5.bmp","character\\jump\\6.bmp","character\\jump\\7.bmp","character\\jump\\8.bmp","character\\jump\\9.bmp","character\\jump\\10.bmp","character\\jump\\11.bmp"};
@@ -23,7 +25,7 @@ char hurt[4][25]={"character\\hurt\\1.bmp","character\\hurt\\2.bmp","character\\
 char attack[10][25]={"character\\Attack\\1.bmp","character\\Attack\\2.bmp","character\\Attack\\3.bmp","character\\Attack\\4.bmp","character\\Attack\\5.bmp","character\\Attack\\6.bmp","character\\Attack\\7.bmp","character\\Attack\\8.bmp","character\\Attack\\9.bmp","character\\Attack\\10.bmp"};
 
 /*--------ANIMATIONS FOR THE OBSTABLES---------*/
-	char enemy_sprite[2][40]={"enemy\\green_slime\\idle\\frame-1.bmp","enemy\\green_slime\\idle\\frame-2.bmp"};
+char enemy_sprite[3][60]={"enemy\\green_slime\\idle\\spike.bmp","enemy\\green_slime\\idle\\frame-1.bmp","enemy\\green_slime\\idle\\frame-2.bmp"};
 
 /*---------------- UI ------------- */
 char menupage[20]={"UI\\Menu.png"};
@@ -41,14 +43,13 @@ int jumplimit = 100;
 int coordinatejump=0;
 
 /*------OBSTACLE STRUCTURES-------*/
-const int slimenumber=2;
-struct slime
-{
-	int slime_x;
-	int slime_y;
-	int slimeidx;
-	bool slimeShow;
-}; slime enemy[slimenumber];
+struct Obstacle {
+    int obs_x;      
+    int obs_y;  
+	int obs_width;
+	int obs_height;  
+    bool active;
+} obs1; 
 
 
 struct background
@@ -62,9 +63,10 @@ struct background bc1[50];
 int bcIndex=0;
 int idleidx=0,runidx=0,jumpupidx=0,jumpdownidx=7,hurtidx=0,attackidx=0;
 
+/*-------Introduce Functions----------*/
+void checkCollision();
 
 
-void enemyMovement();
 void iDraw() {
 	iClear();
 	if(gameState==0 || gameState==-1)
@@ -80,8 +82,10 @@ void iDraw() {
 		{
 			iShowBMP(bc1[i].x,bc1[i].y,bc[i]);
 		}
+		iText(1, 1000, "Score: ", GLUT_BITMAP_HELVETICA_12);
 		if(jump)
 		{
+			run_state=true;
 			if(jumpup)
 			{
 				iShowBMP2(X,Y+coordinatejump,jump_sprite[jumpupidx],0);
@@ -95,15 +99,20 @@ void iDraw() {
 		{
 			if(!StandPosition)
 			{
+				run_state=true;
 				iShowBMP2(X,Y,run[runidx],0);
 			}
 			else
 			{
+				run_state=false;
 				iShowBMP2(X,Y,idle[idleidx],0);
 			}
-		}	
-
-		enemyMovement();
+		}
+		if(obs1.active)
+		{
+			iShowBMP2(obs1.obs_x,obs1.obs_y,enemy_sprite[0],0);
+		}
+		checkCollision();	
 	}
 	
 }
@@ -119,62 +128,23 @@ void setAll()
 		sum+=55;
 	}
 }
-
-
-
 void change()
 {
 	if(gameState==1){
 	for(int i=0;i<20;i++)
 	{
-		bc1[i].x-= 30;
-		// if(bc1[i].x<=0)
+		bc1[i].x-= 55;
+		if(bc1[i].x<=0)
+		{
+			bc1[i].x=1100;
+		}
+		// if (bc1[i].x + 55 <= 0) 
 		// {
-		// 	bc1[i].x=1100;
-		//}
-		if (bc1[i].x + 55 <= 0) 
-		{
-            bc1[i].x = bc1[(i == 0 ? 19 : i - 1)].x + 55; 
-		}
-	}
-
-	for(int i=0;i<slimenumber;i++)
-	{
-		enemy[i].slime_x-=10;
-		if(enemy[i].slime_x  <=0)
-		{
-			enemy[i].slime_x = screenwidth+ rand()%100;
-		}
-		enemy[i].slimeidx ++;
-		if(enemy[i].slimeidx>2)
-		{
-			enemy[i].slimeidx =0;
-		}
+        //     bc1[i].x = bc1[(i == 0 ? 19 : i - 1)].x + 55; 
+		// }
 	}
 	}
 }
-
-void setEnemyVariables()
-{
-	for(int i=0;i<slimenumber;i++)
-	{
-		enemy[i].slime_x = screenwidth+rand()%100;
-		enemy[i].slime_y= 200 + rand() % 100;
-		enemy[i].slimeidx = rand() % 2;
-		enemy[i].slimeShow =true;
-	}
-}
-void enemyMovement()
-{
-	for(int i=0;i<slimenumber;i++)
-	{
-		if(enemy[i].slimeShow)
-		{
-			iShowBMP2(enemy[i].slime_x,enemy[i].slime_y,enemy_sprite[enemy[i].slimeidx],0);
-		}
-	}
-}
-
 void jumping()
 {
 	if(jump)
@@ -202,6 +172,50 @@ void jumping()
 	}
 }
 
+/*-------Static Obstcales Setup and Movement---------*/
+void set_obstacle()
+{
+	obs1.obs_x=1100;
+	obs1.obs_y=55;
+	obs1.obs_width=67;
+	obs1.obs_height=100;
+}
+void generate_obstacle()
+{
+	int x=rand()%2;
+	if(x==1){
+		obs1.active=true;
+		printf("Collision Active!!\n");
+	}
+}
+void move_obsctacle()
+{
+	obs1.obs_x-=30;
+	if(obs1.obs_x<0)
+	{
+		obs1.active=false;
+		obs1.obs_x=1100;
+		printf("Collision Inactive\n");
+	}
+}
+void checkCollision()
+{
+	if (obs1.active && !jump) 
+	{
+		printf("Entered checkCollsion\n");
+        if (X<obs1.obs_x+obs1.obs_width && X+playerHeight>obs1.obs_x && (Y+coordinatejump)<obs1.obs_y+obs1.obs_height && (Y+coordinatejump)+playerHeight>obs1.obs_y)
+		{
+			++collision_number;
+			printf("Collision no: %d\n",collision_number);
+           	//gameState = 0;
+			if(collision_number>3)
+			{	
+				gameState=0;
+			}
+			printf("Collision detected!\n");
+        }
+    }
+}
 
 /*
 	function iMouseMove() is called when the user presses and drags the mouse.
@@ -226,13 +240,6 @@ void iMouse(int button, int state, int mx, int my) {
 	key- holds the ASCII value of the key pressed.
 	*/
 void iKeyboard(unsigned char key) {
-	if (key == 'S') {
-		gameState=1;
-	}
-	else if(key=='E')
-	{
-		gameState=0;
-	}
 	if(key==' ')
 	{
 		if(!jump)
@@ -309,7 +316,9 @@ void attack_anim()
 char musicfile[100]={"Resouces\\music\\nightfall-future-bass-music-228100.wav"};
 int main() {
 	setAll();
-	setEnemyVariables();
+	set_obstacle();
+	iSetTimer(300,generate_obstacle);
+	iSetTimer(100,move_obsctacle);
 	if(musicOn)
 	{
 		//PlaySound( musicfile , NULL, SND_LOOP | SND_ASYNC);
@@ -317,7 +326,7 @@ int main() {
 	iSetTimer(100,change);
 	iSetTimer(100,idle_anim);
 	iSetTimer(100,run_anim);
-	iSetTimer(50,jumping);
+	iSetTimer(5,jumping);
 	iSetTimer(50,jumpup_anim);
 	iSetTimer(50,jumpdown_anim);
 	iInitialize(screenlength,screenwidth, "Spooky Sprints");
