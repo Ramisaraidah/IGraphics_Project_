@@ -11,7 +11,7 @@ int collision_number=0;
 /*-----COORDINATES--------*/
 int X=300;
 int Y=55;
-int playerWidth=52, playerHeight=112;
+int playerWidth=48, playerHeight=125;
 
 
 /*----------- Background --------- */ 
@@ -56,7 +56,7 @@ int StandCounter = 0;
 bool jump = false;
 bool jumpup = false;
 bool jumpdown = false;
-int jumplimit = 100;
+int jumplimit = 130;
 int coordinatejump=0;
 
 /*------OBSTACLE STRUCTURES-------*/
@@ -84,6 +84,7 @@ int idleidx=0,runidx=0,jumpupidx=0,jumpdownidx=7,hurtidx=0,attackidx=0;
 void checkCollision();
 void checkCoinCollection();
 void drawCoins();
+void respawnCoins();
 
 /*----------------    i draw   --------------------- I DRAW --------------------------------------------*/
 void iDraw() {
@@ -91,7 +92,8 @@ void iDraw() {
 	if(gameState==0 || gameState==-1)
 	{
 		iShowBMP(0,0,menupage);
-		iText(200, 300, "Press 'S' to Start the Game. Press 'E' anytime to end the game.\n", GLUT_BITMAP_TIMES_ROMAN_24);
+		iText(300, 300, "Press 'UP ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
+		iText(300, 400, "Press 'DOWN ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
 	}
 	else if(gameState==1)
 	{
@@ -183,10 +185,6 @@ void change()
 		{
 			bc1[i].x=1100;
 		}
-		// if (bc1[i].x + 55 <= 0) 
-		// {
-        //     bc1[i].x = bc1[(i == 0 ? 19 : i - 1)].x + 55; 
-		// }
 	}
 	}
 }
@@ -223,7 +221,7 @@ void set_obstacle()
 	obs1.obs_x=1100;
 	obs1.obs_y=55;
 	obs1.obs_width=67;
-	obs1.obs_height=100;
+	obs1.obs_height=60;
 }
 void generate_obstacle()
 {
@@ -245,18 +243,18 @@ void move_obsctacle()
 }
 void checkCollision()
 {
-	if (obs1.active && !jump) 
+	if (obs1.active /*&& !jump*/) 
 	{
 		printf("Entered checkCollsion\n");
-        if (X<obs1.obs_x+obs1.obs_width && X+playerHeight>obs1.obs_x && (Y+coordinatejump)<obs1.obs_y+obs1.obs_height && (Y+coordinatejump)+playerHeight>obs1.obs_y)
+        if ((X<obs1.obs_x+obs1.obs_width && X+playerWidth>obs1.obs_x ) && ((Y+coordinatejump)<obs1.obs_y+obs1.obs_height && (Y+coordinatejump)+playerHeight>obs1.obs_y))
 		{
 			++collision_number;
 			printf("Collision no: %d\n",collision_number);
-           	//gameState = 0;
-			if(collision_number> 3*15)
-			{	
-				gameState=0;
-			}
+           	gameState = 0;
+			// if(collision_number> 3*15)
+			// {	
+			// 	gameState=0;
+			// }
 			printf("Collision detected!\n");
         }
     }
@@ -269,14 +267,14 @@ void checkCollision()
 void initializeCoins() {
     for (int i = 0; i < MAX_COINS; i++) {
         coins[i].x = screenlength + rand() % 400;;  
-        coins[i].y = Y; 
+        coins[i].y = Y + rand()%200; 
         coins[i].active = true;
     }
 }
 void moveCoins() {
     for (int i = 0; i < MAX_COINS; i++) {
         if (coins[i].active) {
-            coins[i].x -= 10; 
+            coins[i].x -= 30; 
             if (coins[i].x < 0) {
                 coins[i].x = screenlength + rand() % 200; 
                 coins[i].y = Y;
@@ -287,7 +285,7 @@ void moveCoins() {
 void checkCoinCollection() {
     for (int i = 0; i < MAX_COINS; i++) {
         if (coins[i].active) {
-            if (X + playerWidth > coins[i].x && X < coins[i].x + 30 && Y + playerHeight > coins[i].y && Y < coins[i].y + 30) {
+            if (X + playerWidth > coins[i].x && X < coins[i].x + 30 && Y + (playerHeight+coordinatejump) > coins[i].y && (Y+coordinatejump) < coins[i].y + 30) {
                 coins[i].active = false; 
                 totalCoinsCollected++; 
                 printf("Coin collected at (%d, %d)! Total: %d\n", coins[i].x, coins[i].y, totalCoinsCollected);
@@ -297,16 +295,7 @@ void checkCoinCollection() {
 		{
 			++coinTime;
 		}
-		if(coinTime>20)
-		{
-			coinTime=0;
-			for (int i = 0; i < MAX_COINS; i++) {
-				coins[i].x = rand() % screenlength + X +10;
-				coins[i].y = Y;
-				coins[i].active = true;
-	        }
-    	}
-			
+		respawnCoins();
     }
 }
 
@@ -316,7 +305,7 @@ void respawnCoins() {
 
         if (!coins[i].active) {
             coins[i].x = rand() % screenlength + X +10;
-            coins[i].y = Y;
+            coins[i].y = Y+rand()%200;
             coins[i].active = true;
         }
     }
