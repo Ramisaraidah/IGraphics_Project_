@@ -9,40 +9,65 @@ int gameState=0;
 bool musicOn = true;
 int collision_number=0;
 bool char_hurt=false;
-
+bool kill;
+int killtimer=0;
 /*-----COORDINATES--------*/
 int X=350;
 int Y=75;
-int playerWidth=48, playerHeight=125;
+int playerWidth=82, playerHeight=143;
 
 
 /*----------- Background --------- */ 
-char bc[22][20]={"back-55\\tile000.bmp","back-55\\tile001.bmp","back-55\\tile002.bmp","back-55\\tile003.bmp","back-55\\tile004.bmp","back-55\\tile005.bmp","back-55\\tile006.bmp","back-55\\tile007.bmp","back-55\\tile008.bmp","back-55\\tile009.bmp","back-55\\tile010.bmp","back-55\\tile011.bmp","back-55\\tile012.bmp","back-55\\tile013.bmp","back-55\\tile014.bmp","back-55\\tile015.bmp","back-55\\tile016.bmp","back-55\\tile017.bmp","back-55\\tile018.bmp","back-55\\tile019.bmp"};
-char back[29][20]={"back_48\\tile000.bmp","back_48\\tile001.bmp","back_48\\tile002.bmp","back_48\\tile003.bmp","back_48\\tile004.bmp",
-					"back_48\\tile005.bmp","back_48\\tile006.bmp","back_48\\tile007.bmp","back_48\\tile008.bmp","back_48\\tile009.bmp",
-					"back_48\\tile010.bmp","back_48\\tile011.bmp","back_48\\tile012.bmp","back_48\\tile013.bmp","back_48\\tile014.bmp",
-					"back_48\\tile015.bmp","back_48\\tile016.bmp","back_48\\tile017.bmp","back_48\\tile018.bmp","back_48\\tile019.bmp",
-					"back_48\\tile020.bmp","back_48\\tile021.bmp","back_48\\tile022.bmp","back_48\\tile023.bmp","back_48\\tile024.bmp",
-					"back_48\\tile025.bmp","back_48\\tile026.bmp","back_48\\tile027.bmp","back_48\\tile028.bmp"};
-char stat_back[20]={"back.bmp"};
+
+char back[29][20]={"back_48\\tile000.bmp","back_48\\tile001.bmp","back_48\\tile002.bmp","back_48\\tile003.bmp",
+					"back_48\\tile004.bmp","back_48\\tile005.bmp","back_48\\tile006.bmp","back_48\\tile007.bmp",
+					"back_48\\tile008.bmp","back_48\\tile009.bmp","back_48\\tile010.bmp","back_48\\tile011.bmp",
+					"back_48\\tile012.bmp","back_48\\tile013.bmp","back_48\\tile014.bmp","back_48\\tile015.bmp",
+					"back_48\\tile016.bmp","back_48\\tile017.bmp","back_48\\tile018.bmp","back_48\\tile019.bmp",
+					"back_48\\tile020.bmp","back_48\\tile021.bmp","back_48\\tile022.bmp","back_48\\tile023.bmp",
+					"back_48\\tile024.bmp","back_48\\tile025.bmp","back_48\\tile026.bmp","back_48\\tile027.bmp",
+					"back_48\\tile028.bmp"};
+
 char size[30]="2_game_background.bmp";
+
 
 /*----------- Animations of main character--------- */
 char idle[6][25]={"character\\Idle\\1.bmp","character\\Idle\\2.bmp","character\\Idle\\3.bmp","character\\Idle\\4.bmp",
 					"character\\Idle\\5.bmp","character\\Idle\\6.bmp"};
+
 char run[8][25]={"character\\Run\\1.bmp","character\\Run\\2.bmp","character\\Run\\3.bmp","character\\Run\\4.bmp",
 					"character\\Run\\5.bmp","character\\Run\\6.bmp","character\\Run\\7.bmp","character\\Run\\8.bmp"};
+
 char jump_sprite[11][25]={"character\\jump\\1.bmp","character\\jump\\2.bmp","character\\jump\\3.bmp","character\\jump\\4.bmp",
 							"character\\jump\\5.bmp","character\\jump\\6.bmp","character\\jump\\7.bmp","character\\jump\\8.bmp",
 							"character\\jump\\9.bmp","character\\jump\\10.bmp","character\\jump\\11.bmp"};
+
 char hurt[4][25]={"character\\hurt\\1.bmp","character\\hurt\\2.bmp","character\\hurt\\3.bmp","character\\hurt\\4.bmp"};
+
 char attack[10][25]={"character\\Attack\\1.bmp","character\\Attack\\2.bmp","character\\Attack\\3.bmp","character\\Attack\\4.bmp",
-						"character\\Attack\\5.bmp","character\\Attack\\6.bmp","character\\Attack\\7.bmp","character\\Attack\\8.bmp",
-						"character\\Attack\\9.bmp","character\\Attack\\10.bmp"};
+					"character\\Attack\\5.bmp","character\\Attack\\6.bmp","character\\Attack\\7.bmp","character\\Attack\\8.bmp",
+					"character\\Attack\\9.bmp","character\\Attack\\10.bmp"};
 
 
 /*--------ANIMATIONS FOR THE OBSTABLES---------*/
-char enemy_sprite[3][60]={"enemy\\green_slime\\idle\\spike.bmp","enemy\\green_slime\\idle\\frame-1.bmp","enemy\\green_slime\\idle\\frame-2.bmp"};
+char enemy_sprite[3][60]={"enemy\\green_slime\\idle\\spike.bmp","enemy\\green_slime\\idle\\frame-1.bmp",
+							"enemy\\green_slime\\idle\\frame-2.bmp"};
+
+
+/*--------------------ENEMY ANIMATIONS--------------------*/
+char reaper_run[8][25]={"enemy\\reaper-bmp\\1.bmp","enemy\\reaper-bmp\\2.bmp","enemy\\reaper-bmp\\3.bmp","enemy\\reaper-bmp\\4.bmp",
+						"enemy\\reaper-bmp\\5.bmp","enemy\\reaper-bmp\\6.bmp","enemy\\reaper-bmp\\7.bmp","enemy\\reaper-bmp\\8.bmp"};
+
+int reaperRunidx=0;
+
+struct Reaper {
+    int x;      
+    int y;  
+	int width;
+	int height;  
+    bool active;
+}reaper; 
+
 
 
 /*--------------------------------Coins---------------------------------*/
@@ -50,21 +75,30 @@ char enemy_sprite[3][60]={"enemy\\green_slime\\idle\\spike.bmp","enemy\\green_sl
 int coinidx=0;
 int totalCoinsCollected = 0;
 int coinTime=0;
-char coin[40][35]={"Accessory\\Coins\\Bronze_1.bmp","Accessory\\Coins\\Bronze_2.bmp","Accessory\\Coins\\Bronze_3.bmp","Accessory\\Coins\\Bronze_4.bmp","Accessory\\Coins\\Bronze_5.bmp","Accessory\\Coins\\Bronze_6.bmp","Accessory\\Coins\\Bronze_7.bmp","Accessory\\Coins\\Bronze_8.bmp","Accessory\\Coins\\Bronze_9.bmp","Accessory\\Coins\\Bronze_10.bmp"};
+char coin[40][35]={"Accessory\\Coins\\Bronze_1.bmp","Accessory\\Coins\\Bronze_2.bmp","Accessory\\Coins\\Bronze_3.bmp",
+					"Accessory\\Coins\\Bronze_4.bmp","Accessory\\Coins\\Bronze_5.bmp","Accessory\\Coins\\Bronze_6.bmp",
+					"Accessory\\Coins\\Bronze_7.bmp","Accessory\\Coins\\Bronze_8.bmp","Accessory\\Coins\\Bronze_9.bmp",
+					"Accessory\\Coins\\Bronze_10.bmp"};
+
 struct Coin {
     int x;       // X-coordinate
     int y;       // Y-coordinate
     bool active; // Whether the coin is active
 };
+
+
 struct Coin coins[MAX_COINS];
+
 
 /*---------------- UI ------------- */
 char menupage[20]={"UI\\Menu.bmp"};
 
 
+
 /*------RUN ANIMATION-----*/
 bool StandPosition = true;
 int StandCounter = 0;
+
 
 /*-----JUMP-------*/
 bool jump = false;
@@ -72,6 +106,8 @@ bool jumpup = false;
 bool jumpdown = false;
 int jumplimit = 130;
 int coordinatejump=0;
+
+
 
 /*------OBSTACLE STRUCTURES-------*/
 struct Obstacle {
@@ -94,11 +130,17 @@ struct background bc1[50];
 int bcIndex=0;
 int idleidx=0,runidx=0,jumpupidx=0,jumpdownidx=7,hurtidx=0,attackidx=0;
 
+
+
 /*-------Introduce Functions----------*/
 void checkCollision();
 void checkCoinCollection();
 void drawCoins();
 void respawnCoins();
+void drawReaper();
+void check_reaper_Collision();
+
+
 
 /*----------------    i draw   --------------------- I DRAW --------------------------------------------*/
 void iDraw() {
@@ -111,6 +153,15 @@ void iDraw() {
 	}
 	else if(gameState==1)
 	{
+		if(kill)
+		{
+			++killtimer;
+			if(killtimer>10)
+			{
+				kill=false;
+				killtimer=0;
+			}
+		}
 		int i,k,j;
 		for(i=0;i<29;i++)
 		{
@@ -121,7 +172,11 @@ void iDraw() {
 		if(jump)
 		{
 			run_state=true;
-			if(jumpup)
+			if(kill)
+			{
+				iShowBMP2(X,Y+coordinatejump,attack[attackidx],0);	
+			}
+			else if(jumpup)
 			{
 				iShowBMP2(X,Y+coordinatejump,jump_sprite[jumpupidx],0);
 			}
@@ -135,17 +190,37 @@ void iDraw() {
 			printf("I am hurt. Show me hurting!!!\n");
 			iShowBMP2(X,Y,hurt[hurtidx],0);
 		}
+		else if(kill)
+		{
+			iShowBMP2(X,Y,attack[attackidx],0);
+		}
 		else
 		{
 			if(!StandPosition)
 			{
-				run_state=true;
-				iShowBMP2(X,Y,run[runidx],0);
+				
+				if(kill)
+				{
+					iShowBMP2(X,Y,attack[attackidx],0);
+				}
+				else
+				{
+					run_state=true;
+					iShowBMP2(X,Y,run[runidx],0);
+
+				}
 			}
 			else
 			{
+				if(kill)
+				{
+					iShowBMP2(X,Y,attack[attackidx],0);
+				}
+				else
+				{
 				run_state=false;
 				iShowBMP2(X,Y,idle[idleidx],0);
+				}
 			}
 		}
 		if(obs1.active)
@@ -153,6 +228,11 @@ void iDraw() {
 			iShowBMP2(obs1.obs_x,obs1.obs_y,enemy_sprite[0],0);
 		}
 		drawCoins();
+
+
+		drawReaper();
+		check_reaper_Collision();
+
 
         // Display Total Coins Collected
         char coinText[50];
@@ -168,9 +248,11 @@ void iDraw() {
         sprintf(collisionText, "	Lives remaing: %d", 3-collision_number);
         iText(900, screenwidth - 20, collisionText, GLUT_BITMAP_HELVETICA_18);
 		checkCollision();	
+
 	}
 	
 }
+
 
 
 void setAll()
@@ -183,6 +265,7 @@ void setAll()
 		sum+=48;
 	}
 }
+
 void change()
 {
 	if(gameState==1){
@@ -196,6 +279,7 @@ void change()
 	}
 	}
 }
+
 void jumping()
 {
 	if(jump)
@@ -223,6 +307,8 @@ void jumping()
 	}
 }
 
+
+
 /*-------Static Obstcales Setup and Movement---------*/
 void set_obstacle()
 {
@@ -231,6 +317,7 @@ void set_obstacle()
 	obs1.obs_width=67;
 	obs1.obs_height=60;
 }
+
 void generate_obstacle()
 {
 	int x=rand()%2;
@@ -239,6 +326,7 @@ void generate_obstacle()
 		//printf("Collision Active!!\n");
 	}
 }
+
 void move_obsctacle()
 {
 	obs1.obs_x-=30;
@@ -249,6 +337,7 @@ void move_obsctacle()
 		//printf("Collision Inactive\n");
 	}
 }
+
 void checkCollision()
 {
 	if (obs1.active) 
@@ -280,6 +369,97 @@ void checkCollision()
 }
 
 
+/*----------Reaper------------*/
+void set_Reaper()
+{
+	reaper.x=screenlength;
+	reaper.y=Y;
+	reaper.width=190;
+	reaper.height=235;
+}
+
+
+void move_reaper()
+{
+	reaper.x-=30;
+	if(reaper.x<0)
+	{
+		reaper.active=false;
+		reaper.x=1392;
+		reaper.width=190;
+		reaper.height=235;
+
+		//printf("Collision Inactive\n");
+	}
+}
+
+void check_reaper_Collision()
+{
+	if (reaper.active) 
+	{
+		// printf("Entered Reaper\n");
+		// printf("X<reaper.x+reaper.width=%d\n",X<reaper.x+reaper.width);
+		// printf("X+playerwidth=%d+%d=%d\n",X,playerWidth,X+playerWidth);
+		// printf("Reaper.x=%d\n",reaper.x);
+		// printf("X+playerWidth>reaper.x=%d\n",X+playerWidth>reaper.x);
+		// printf("(Y+coordinatejump)<reaper.y+reaper.height=%d\n",(Y+coordinatejump)<reaper.y+reaper.height);
+		// printf("Y+coordinatejump)+playerHeight>reaper.y=%d\n",(Y+coordinatejump)+playerHeight>reaper.y);
+		// printf("Reaper.x=%d, Reaper.y=%d\n",reaper.x,reaper.y);
+		reaper.width=190;
+		reaper.height=235;
+        if ((X<reaper.x+reaper.width && X+playerWidth>reaper.x) 
+		&& ((Y+coordinatejump)<reaper.y+reaper.height
+		&& (Y+coordinatejump)+playerHeight>reaper.y))
+		{
+			if(kill)
+			{
+				reaper.active=false;
+				kill=false;
+			}
+			else
+			{
+				printf("Reaper detected!\n");
+				reaper.active=false;
+				++collision_number;
+				char_hurt=true;
+				if(char_hurt)
+				{
+					printf("Initiate hurt anim\n");
+				}
+				printf("Collision no: %d\n",collision_number);
+				//gameState = 0;
+				if(collision_number> 3)
+				{	
+					gameState=0;
+					collision_number=0;
+				}
+				printf("Collision detected!\n");
+				}
+        }
+    }
+
+}
+
+void respawnReaper() {
+	
+
+        if (!reaper.active) {
+            reaper.x = rand() % screenlength + X +10;
+            reaper.y = Y;
+            reaper.active = true;
+			reaper.width=190;
+			reaper.height=235;
+        }
+}
+void drawReaper() {
+        if (reaper.active) {
+            iShowBMP2(reaper.x, reaper.y, reaper_run[reaperRunidx], 16777215);
+			reaper.width=190;
+			reaper.height=235;
+        }
+
+}
+
 
 
 /*-------------------------Coin Collection------------------------*/
@@ -290,6 +470,7 @@ void initializeCoins() {
         coins[i].active = true;
     }
 }
+
 void moveCoins() {
     for (int i = 0; i < MAX_COINS; i++) {
         if (coins[i].active) {
@@ -301,6 +482,7 @@ void moveCoins() {
         }
     }
 }
+
 void checkCoinCollection() {
     for (int i = 0; i < MAX_COINS; i++) {
         if (coins[i].active) {
@@ -319,6 +501,7 @@ void checkCoinCollection() {
 		respawnCoins();
     }
 }
+
 void respawnCoins() {
 	
     for (int i = 0; i < MAX_COINS; i++) {
@@ -330,6 +513,7 @@ void respawnCoins() {
         }
     }
 }
+
 void drawCoins() {
     for (int i = 0; i < MAX_COINS; i++) {
         if (coins[i].active) {
@@ -337,6 +521,8 @@ void drawCoins() {
         }
     }
 }
+
+
 
 /*
 	function iMouseMove() is called when the user presses and drags the mouse.
@@ -347,6 +533,7 @@ void iMouseMove(int mx, int my) {
 	//place your codes her
 
 }
+
 
 /*
 	function iMouse() is called when the user presses/releases the mouse.
@@ -363,6 +550,12 @@ void iMouse(int button, int state, int mx, int my) {
 			gameState=1;
 		}
 	}
+
+	if(gameState==1)
+	{
+		printf("X=%d, Y=%d, playerwidth=%d, Playerheight=%d\n",X,Y,playerWidth,playerHeight);
+		printf("reaper.x=%d, reaper.y=%d, reaperwidth=%d, reaperheight=%d\n",reaper.x,reaper.y,reaper.width,reaper.height);
+	}
 	
 }
 
@@ -378,6 +571,11 @@ void iKeyboard(unsigned char key) {
 			jump=true;
 			jumpup=true;
 		}
+	}
+	if(key=='k'||key=='K')
+	{
+		kill=true;
+		printf("Kill the enemy!!!\n");
 	}
 
 	
@@ -415,15 +613,24 @@ void iSpecialKeyboard(unsigned char key) {
 
 void anim()
 {
+	/*---------PLAYER-----------*/
+
+	//player idle anim
 	idleidx++;
-	if(idleidx>=6) idleidx=0;
+	if(idleidx>=6)
+		idleidx=0;
 	
+	//player run anim
 	runidx++;
-	if(runidx>=8) runidx=0;
+	if(runidx>=8)
+		runidx=0;
 	
+	//player jump anim
 	jumpupidx++;
-	if(jumpupidx>=11) jumpupidx=10;
+	if(jumpupidx>=11) 
+		jumpupidx=10;
 	
+	//Player hurt
 	if(char_hurt)
 	{
 		hurtidx++;
@@ -435,35 +642,63 @@ void anim()
 
 	}
 	
-	attackidx++;
-	if(attackidx>=10) attackidx=0;
-
-
+	
+	
+/*----------Coins--------*/
+	//Coin Animations
 	coinidx++;
-	if(coinidx>=8) coinidx=0;
+	if(coinidx>=8)
+		coinidx=0;
+
+
+	/*-----------Reaper-----------*/
+	reaperRunidx++;
+	if(reaperRunidx>=7)
+		reaperRunidx=0;
+
 }
+
 void obstacle_functions()
 {
 	generate_obstacle();
 	move_obsctacle();
 }
+
 void coin_functions_timer ()
 {
 	moveCoins();
 	respawnCoins();
+	move_reaper();
+	respawnReaper();
 }
+
+void fast_animations()
+{
+
+	//Player Attack anim
+	attackidx++;
+	if(attackidx>=10)
+		attackidx=0;
+
+}
+
 char musicfile[100]="Resouces\\music\\nightfall-future-bass-music-228100.wav";
 char musicfiles[100]="Resouces\\music\\nightfall-future-bass-music-228100.wav";
 int main() {
 
-	//5 isettimers used!!
+	//6 isettimers used!!
 
 	srand(0);
+
 	setAll();
+	
 	set_obstacle();
 	generate_obstacle();
+	
 	iSetTimer(300,generate_obstacle);
 	iSetTimer(100,move_obsctacle);
+	
+	iSetTimer(10,fast_animations);
 	if(musicOn)
 	{
 		//PlaySound(musicfiles,NULL,SND_LOOP|SND_ASYNC);
@@ -473,6 +708,7 @@ int main() {
 	iSetTimer(5,jumping);
 	initializeCoins();
 	iSetTimer(100, coin_functions_timer);        
+	
 	iInitialize(screenlength,screenwidth, "Spooky Sprints");
 	return 0;
 }
