@@ -1,30 +1,44 @@
 # include "iGraphics.h"
+#include<Windows.h>
 
-#define screenwidth 619
-#define screenlength 1100
+#define screenwidth 783
+#define screenlength 1392
 
 bool run_state;
 int gameState=0;
 bool musicOn = true;
 int collision_number=0;
+bool char_hurt=false;
 
 /*-----COORDINATES--------*/
-int X=300;
-int Y=55;
+int X=350;
+int Y=75;
 int playerWidth=48, playerHeight=125;
 
 
 /*----------- Background --------- */ 
 char bc[22][20]={"back-55\\tile000.bmp","back-55\\tile001.bmp","back-55\\tile002.bmp","back-55\\tile003.bmp","back-55\\tile004.bmp","back-55\\tile005.bmp","back-55\\tile006.bmp","back-55\\tile007.bmp","back-55\\tile008.bmp","back-55\\tile009.bmp","back-55\\tile010.bmp","back-55\\tile011.bmp","back-55\\tile012.bmp","back-55\\tile013.bmp","back-55\\tile014.bmp","back-55\\tile015.bmp","back-55\\tile016.bmp","back-55\\tile017.bmp","back-55\\tile018.bmp","back-55\\tile019.bmp"};
+char back[29][20]={"back_48\\tile000.bmp","back_48\\tile001.bmp","back_48\\tile002.bmp","back_48\\tile003.bmp","back_48\\tile004.bmp",
+					"back_48\\tile005.bmp","back_48\\tile006.bmp","back_48\\tile007.bmp","back_48\\tile008.bmp","back_48\\tile009.bmp",
+					"back_48\\tile010.bmp","back_48\\tile011.bmp","back_48\\tile012.bmp","back_48\\tile013.bmp","back_48\\tile014.bmp",
+					"back_48\\tile015.bmp","back_48\\tile016.bmp","back_48\\tile017.bmp","back_48\\tile018.bmp","back_48\\tile019.bmp",
+					"back_48\\tile020.bmp","back_48\\tile021.bmp","back_48\\tile022.bmp","back_48\\tile023.bmp","back_48\\tile024.bmp",
+					"back_48\\tile025.bmp","back_48\\tile026.bmp","back_48\\tile027.bmp","back_48\\tile028.bmp"};
 char stat_back[20]={"back.bmp"};
-
+char size[30]="2_game_background.bmp";
 
 /*----------- Animations of main character--------- */
-char idle[6][25]={"character\\Idle\\1.bmp","character\\Idle\\2.bmp","character\\Idle\\3.bmp","character\\Idle\\4.bmp","character\\Idle\\5.bmp","character\\Idle\\6.bmp"};
-char run[8][25]={"character\\Run\\1.bmp","character\\Run\\2.bmp","character\\Run\\3.bmp","character\\Run\\4.bmp","character\\Run\\5.bmp","character\\Run\\6.bmp","character\\Run\\7.bmp","character\\Run\\8.bmp"};
-char jump_sprite[11][25]={"character\\jump\\1.bmp","character\\jump\\2.bmp","character\\jump\\3.bmp","character\\jump\\4.bmp","character\\jump\\5.bmp","character\\jump\\6.bmp","character\\jump\\7.bmp","character\\jump\\8.bmp","character\\jump\\9.bmp","character\\jump\\10.bmp","character\\jump\\11.bmp"};
+char idle[6][25]={"character\\Idle\\1.bmp","character\\Idle\\2.bmp","character\\Idle\\3.bmp","character\\Idle\\4.bmp",
+					"character\\Idle\\5.bmp","character\\Idle\\6.bmp"};
+char run[8][25]={"character\\Run\\1.bmp","character\\Run\\2.bmp","character\\Run\\3.bmp","character\\Run\\4.bmp",
+					"character\\Run\\5.bmp","character\\Run\\6.bmp","character\\Run\\7.bmp","character\\Run\\8.bmp"};
+char jump_sprite[11][25]={"character\\jump\\1.bmp","character\\jump\\2.bmp","character\\jump\\3.bmp","character\\jump\\4.bmp",
+							"character\\jump\\5.bmp","character\\jump\\6.bmp","character\\jump\\7.bmp","character\\jump\\8.bmp",
+							"character\\jump\\9.bmp","character\\jump\\10.bmp","character\\jump\\11.bmp"};
 char hurt[4][25]={"character\\hurt\\1.bmp","character\\hurt\\2.bmp","character\\hurt\\3.bmp","character\\hurt\\4.bmp"};
-char attack[10][25]={"character\\Attack\\1.bmp","character\\Attack\\2.bmp","character\\Attack\\3.bmp","character\\Attack\\4.bmp","character\\Attack\\5.bmp","character\\Attack\\6.bmp","character\\Attack\\7.bmp","character\\Attack\\8.bmp","character\\Attack\\9.bmp","character\\Attack\\10.bmp"};
+char attack[10][25]={"character\\Attack\\1.bmp","character\\Attack\\2.bmp","character\\Attack\\3.bmp","character\\Attack\\4.bmp",
+						"character\\Attack\\5.bmp","character\\Attack\\6.bmp","character\\Attack\\7.bmp","character\\Attack\\8.bmp",
+						"character\\Attack\\9.bmp","character\\Attack\\10.bmp"};
 
 
 /*--------ANIMATIONS FOR THE OBSTABLES---------*/
@@ -45,7 +59,7 @@ struct Coin {
 struct Coin coins[MAX_COINS];
 
 /*---------------- UI ------------- */
-char menupage[20]={"UI\\Menu.png"};
+char menupage[20]={"UI\\Menu.bmp"};
 
 
 /*------RUN ANIMATION-----*/
@@ -92,25 +106,17 @@ void iDraw() {
 	if(gameState==0 || gameState==-1)
 	{
 		iShowBMP(0,0,menupage);
-		iText(300, 300, "Press 'UP ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
-		iText(300, 400, "Press 'DOWN ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
+		// iText(300, 300, "Press 'UP ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
+		// iText(300, 400, "Press 'DOWN ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
 	}
 	else if(gameState==1)
 	{
-		if(coins->active)
-		{
-			printf("\n\nACTIVE\n\n");
-		}
-		else
-		{
-			printf("\n\nINACTIVE\n\n");
-		}
 		int i,k,j;
-		iShowBMP(0,0,stat_back);
-		for(i=0;i<20;i++)
+		for(i=0;i<29;i++)
 		{
-			iShowBMP(bc1[i].x,bc1[i].y,bc[i]);
+			iShowBMP(bc1[i].x,bc1[i].y,back[i]);
 		}
+		//iShowBMP(0,0,size);
 		iText(1, 1000, "Score: ", GLUT_BITMAP_HELVETICA_12);
 		if(jump)
 		{
@@ -123,6 +129,11 @@ void iDraw() {
 			{
 				iShowBMP2(X,Y+coordinatejump,jump_sprite[jumpdownidx],0);
 			}
+		}
+		else if(char_hurt)
+		{
+			printf("I am hurt. Show me hurting!!!\n");
+			iShowBMP2(X,Y,hurt[hurtidx],0);
 		}
 		else
 		{
@@ -150,14 +161,11 @@ void iDraw() {
 
         // Check for coin collection
         checkCoinCollection();
-
-        if (obs1.active) {
-            iShowBMP2(obs1.obs_x, obs1.obs_y, enemy_sprite[0], 0);
-        }
+        
 
 
 		char collisionText[50];
-        sprintf(collisionText, "	Lives remaing: %d", 3-(collision_number/15));
+        sprintf(collisionText, "	Lives remaing: %d", 3-collision_number);
         iText(900, screenwidth - 20, collisionText, GLUT_BITMAP_HELVETICA_18);
 		checkCollision();	
 	}
@@ -168,22 +176,22 @@ void iDraw() {
 void setAll()
 {
 	int sum=0;
-	for(int i=0;i<20;i++)
+	for(int i=0;i<29;i++)
 	{
 		bc1[i].y=0;
 		bc1[i].x=sum;
-		sum+=55;
+		sum+=48;
 	}
 }
 void change()
 {
 	if(gameState==1){
-	for(int i=0;i<20;i++)
+	for(int i=0;i<29;i++)
 	{
-		bc1[i].x-= 55;
-		if(bc1[i].x<=0)
+		bc1[i].x-= 48;
+		if(bc1[i].x<0)
 		{
-			bc1[i].x=1100;
+			bc1[i].x=1392-48;
 		}
 	}
 	}
@@ -218,8 +226,8 @@ void jumping()
 /*-------Static Obstcales Setup and Movement---------*/
 void set_obstacle()
 {
-	obs1.obs_x=1100;
-	obs1.obs_y=55;
+	obs1.obs_x=1392;
+	obs1.obs_y=75;
 	obs1.obs_width=67;
 	obs1.obs_height=60;
 }
@@ -228,7 +236,7 @@ void generate_obstacle()
 	int x=rand()%2;
 	if(x==1){
 		obs1.active=true;
-		printf("Collision Active!!\n");
+		//printf("Collision Active!!\n");
 	}
 }
 void move_obsctacle()
@@ -237,27 +245,38 @@ void move_obsctacle()
 	if(obs1.obs_x<0)
 	{
 		obs1.active=false;
-		obs1.obs_x=1100;
-		printf("Collision Inactive\n");
+		obs1.obs_x=1392;
+		//printf("Collision Inactive\n");
 	}
 }
 void checkCollision()
 {
-	if (obs1.active /*&& !jump*/) 
+	if (obs1.active) 
 	{
-		printf("Entered checkCollsion\n");
-        if ((X<obs1.obs_x+obs1.obs_width && X+playerWidth>obs1.obs_x ) && ((Y+coordinatejump)<obs1.obs_y+obs1.obs_height && (Y+coordinatejump)+playerHeight>obs1.obs_y))
+		//printf("Entered checkCollsion\n");
+        if ((X<obs1.obs_x+obs1.obs_width && X+playerWidth>obs1.obs_x ) 
+		&& ((Y+coordinatejump)<obs1.obs_y+obs1.obs_height
+		 && (Y+coordinatejump)+playerHeight>obs1.obs_y))
 		{
+			printf("Collision detected!\n");
+			obs1.active=false;
 			++collision_number;
+			char_hurt=true;
+			if(char_hurt)
+			{
+				printf("Initiate hurt anim\n");
+			}
 			printf("Collision no: %d\n",collision_number);
-           	gameState = 0;
-			// if(collision_number> 3*15)
-			// {	
-			// 	gameState=0;
-			// }
+           	//gameState = 0;
+			if(collision_number> 3)
+			{	
+				gameState=0;
+				collision_number=0;
+			}
 			printf("Collision detected!\n");
         }
     }
+	//generate_obstacle();
 }
 
 
@@ -285,10 +304,12 @@ void moveCoins() {
 void checkCoinCollection() {
     for (int i = 0; i < MAX_COINS; i++) {
         if (coins[i].active) {
-            if (X + playerWidth > coins[i].x && X < coins[i].x + 30 && Y + (playerHeight+coordinatejump) > coins[i].y && (Y+coordinatejump) < coins[i].y + 30) {
+            if (X + playerWidth > coins[i].x && X < coins[i].x + 30 
+			&& Y + (playerHeight+coordinatejump) > coins[i].y 
+			&& (Y+coordinatejump) < coins[i].y + 30) {
                 coins[i].active = false; 
                 totalCoinsCollected++; 
-                printf("Coin collected at (%d, %d)! Total: %d\n", coins[i].x, coins[i].y, totalCoinsCollected);
+                //printf("Coin collected at (%d, %d)! Total: %d\n", coins[i].x, coins[i].y, totalCoinsCollected);
             }
         }
 		else
@@ -298,7 +319,6 @@ void checkCoinCollection() {
 		respawnCoins();
     }
 }
-
 void respawnCoins() {
 	
     for (int i = 0; i < MAX_COINS; i++) {
@@ -333,6 +353,16 @@ void iMouseMove(int mx, int my) {
 	(mx, my) is the position where the mouse pointer is.
 	*/
 void iMouse(int button, int state, int mx, int my) {
+	//printf("x=%d y=%d\n",mx,my);
+	//printf("%d\n",gameState);
+	if(gameState==0)
+	{
+		if(mx>=500 && mx<=893 && my>=521 && my<=574)
+		{
+			//printf("I'm here!!! Let me in!!\n");
+			gameState=1;
+		}
+	}
 	
 }
 
@@ -382,64 +412,67 @@ void iSpecialKeyboard(unsigned char key) {
 }
 
 
-void idle_anim()
+
+void anim()
 {
 	idleidx++;
 	if(idleidx>=6) idleidx=0;
-}
-void run_anim()
-{
+	
 	runidx++;
 	if(runidx>=8) runidx=0;
-}
-
-void jumpup_anim()
-{
+	
 	jumpupidx++;
-	if(jumpupidx>=6) jumpupidx=5;
-}
-void jumpdown_anim()
-{
-	jumpdownidx++;
-	if(jumpdownidx>=11) jumpdownidx=10;
-}
-void hurt_anim()
-{
-	hurtidx++;
-	if(hurtidx>=4) hurtidx=0;
-}
-void attack_anim()
-{
+	if(jumpupidx>=11) jumpupidx=10;
+	
+	if(char_hurt)
+	{
+		hurtidx++;
+		if(hurtidx>=3)
+		{
+			hurtidx=0;
+			char_hurt=false;
+		}
+
+	}
+	
 	attackidx++;
 	if(attackidx>=10) attackidx=0;
-}
-void coin_anim()
-{
+
+
 	coinidx++;
 	if(coinidx>=8) coinidx=0;
 }
-
-char musicfile[100]={"Resouces\\music\\nightfall-future-bass-music-228100.wav"};
+void obstacle_functions()
+{
+	generate_obstacle();
+	move_obsctacle();
+}
+void coin_functions_timer ()
+{
+	moveCoins();
+	respawnCoins();
+}
+char musicfile[100]="Resouces\\music\\nightfall-future-bass-music-228100.wav";
+char musicfiles[100]="Resouces\\music\\nightfall-future-bass-music-228100.wav";
 int main() {
+
+	//5 isettimers used!!
+
 	srand(0);
 	setAll();
 	set_obstacle();
+	generate_obstacle();
 	iSetTimer(300,generate_obstacle);
 	iSetTimer(100,move_obsctacle);
 	if(musicOn)
 	{
-		//PlaySound( musicfile , NULL, SND_LOOP | SND_ASYNC);
+		//PlaySound(musicfiles,NULL,SND_LOOP|SND_ASYNC);
 	}
 	iSetTimer(100,change);
-	iSetTimer(100,coin_anim);
-	iSetTimer(100,idle_anim);
-	iSetTimer(100,run_anim);
+	iSetTimer(100,anim);
 	iSetTimer(5,jumping);
-	iSetTimer(50,jumpup_anim);
-	iSetTimer(50,jumpdown_anim);
 	initializeCoins();
-	iSetTimer(100, moveCoins);        
-    iSetTimer(100, respawnCoins);
+	iSetTimer(100, coin_functions_timer);        
 	iInitialize(screenlength,screenwidth, "Spooky Sprints");
 	return 0;
 }
