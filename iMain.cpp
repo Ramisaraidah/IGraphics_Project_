@@ -145,6 +145,7 @@ void check_reaper_Collision();
 /*----------------    i draw   --------------------- I DRAW --------------------------------------------*/
 void iDraw() {
 	iClear();
+	srand(0);
 	if(gameState==0 || gameState==-1)
 	{
 		iShowBMP(0,0,menupage);
@@ -223,6 +224,7 @@ void iDraw() {
 				}
 			}
 		}
+
 		if(obs1.active)
 		{
 			iShowBMP2(obs1.obs_x,obs1.obs_y,enemy_sprite[0],0);
@@ -232,6 +234,12 @@ void iDraw() {
 
 		drawReaper();
 		check_reaper_Collision();
+
+		if(obs1.obs_x==reaper.x)
+		{
+			obs1.active=false;
+			reaper.active=false;
+		}
 
 
         // Display Total Coins Collected
