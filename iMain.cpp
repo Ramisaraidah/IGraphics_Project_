@@ -121,6 +121,8 @@ char bubble[40]="Accessory\\poweup_effects\\bubble.bmp";
 
 //Immunity
 bool immunity_effect=false;
+int immunityActivateTimer=0;
+int immunityDeactivateTimer=0;
 
 
 /*------OBSTACLE STRUCTURES-------*/
@@ -157,6 +159,8 @@ void checkCoinCollection();
 //Reaper
 void check_reaper_Collision();
 
+//Timer
+void func_timers();
 
 
 /*----------------    i draw   --------------------- I DRAW --------------------------------------------*/
@@ -170,27 +174,13 @@ void iDraw() {
 	}
 	else if(gameState==1)
 	{
-		
-		if(kill)
-		{
-			++killtimer;
-			if(killtimer>10)
-			{
-				kill=false;
-				killtimer=0;
-			}
-		}
-		if(!reaper.active)
-		{
-			++reaper_dead_timer;
-		}
+		func_timers();
 		int i,k,j;
 		for(i=0;i<29;i++)
 		{
 			iShowBMP(bc1[i].x,bc1[i].y,back[i]);
 		}
-		immunity.active=true;
-		if(immunity.active)
+		if(immunity_effect)
 		{
 			iShowBMP2(X-58,Y+coordinatejump,bubble,0);
 		}
@@ -275,7 +265,6 @@ void iDraw() {
 
         // Check for coin collection
         checkCoinCollection();
-        iShowBMP2(500,600,cauldron,0);
 
 
 		char collisionText[50];
@@ -287,6 +276,41 @@ void iDraw() {
 	
 }
 
+
+/*----------------Timers to call functions------------*/
+void func_timers()
+{
+
+	//Attack
+
+	if(kill)
+		{
+			++killtimer;
+			if(killtimer>10)
+			{
+				kill=false;
+				killtimer=0;
+			}
+		}
+
+	//Reaper
+		if(!reaper.active)
+		{
+			++reaper_dead_timer;
+		}
+
+
+	//Immunity timer
+	if(immunity_effect)
+	{
+		++immunityActivateTimer;
+		if(immunityActivateTimer>50)
+		{
+			immunity_effect=false;
+			immunityActivateTimer=0;
+		}
+	}
+}
 
 /*--------------------Render Background-------------------------*/
 void setAll()
@@ -556,12 +580,39 @@ void setImmunityPower()
 }
 void respawnImmunityPower()
 {
-
+	int x=rand()%4;
+	if(x==1){
+		
+	immunity.x=1390+1000;
+	immunity.y=Y + rand()%200; 
+	immunity.width=85;
+	immunity.height=90;
+	immunity.active=true;	
+		
+		//printf("Collision Active!!\n");
+	}
 }
 
 void moveImmunityPower()
 {
-	
+	immunity.x-=50;
+	if(immunity.x<0)
+	{
+		immunity.active=false;
+		immunity.x=1390+1000;
+	}
+}
+void GainImmunityPower()
+{
+	if ((X<immunity.x+immunity.width && X+playerWidth>immunity.x) 
+		&& ((Y+coordinatejump)<immunity.y+immunity.height
+		&& (Y+coordinatejump)+playerHeight>immunity.y))
+		{
+			
+				printf("I am immune!\n");
+				immunity.active=false;
+				immunity_effect=true;			
+        }
 }
 
 
