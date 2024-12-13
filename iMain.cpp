@@ -1,5 +1,6 @@
 # include "iGraphics.h"
 #include<Windows.h>
+#include<Windows.h>
 
 #define screenwidth 783
 #define screenlength 1392
@@ -120,8 +121,7 @@ char bubble[40]="Accessory\\poweup_effects\\bubble.bmp";
 
 //Immunity
 bool immunity_effect=false;
-int immunityActiveTimer=0;
-int immunityDeactivateTimer=0;
+
 
 /*------OBSTACLE STRUCTURES-------*/
 struct Obstacle {
@@ -157,9 +157,6 @@ void checkCoinCollection();
 //Reaper
 void check_reaper_Collision();
 
-//Timers
-void func_timers();
-
 
 
 /*----------------    i draw   --------------------- I DRAW --------------------------------------------*/
@@ -168,16 +165,32 @@ void iDraw() {
 	if(gameState==0 || gameState==-1)
 	{
 		iShowBMP(0,0,menupage);
+		// iText(300, 300, "Press 'UP ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
+		// iText(300, 400, "Press 'DOWN ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
 	}
 	else if(gameState==1)
 	{
-		func_timers();
+		
+		if(kill)
+		{
+			++killtimer;
+			if(killtimer>10)
+			{
+				kill=false;
+				killtimer=0;
+			}
+		}
+		if(!reaper.active)
+		{
+			++reaper_dead_timer;
+		}
 		int i,k,j;
 		for(i=0;i<29;i++)
 		{
 			iShowBMP(bc1[i].x,bc1[i].y,back[i]);
 		}
-		if(immunity_effect)
+		immunity.active=true;
+		if(immunity.active)
 		{
 			iShowBMP2(X-58,Y+coordinatejump,bubble,0);
 		}
@@ -262,6 +275,7 @@ void iDraw() {
 
         // Check for coin collection
         checkCoinCollection();
+        iShowBMP2(500,600,cauldron,0);
 
 
 		char collisionText[50];
@@ -272,42 +286,6 @@ void iDraw() {
 	}
 	
 }
-
-
-/*--------------Function_Call_Timers------------------------*/
-void func_timers()
-{
-
-	//Attack
-	if(kill)
-	{
-		++killtimer;
-		if(killtimer>10)
-		{
-			kill=false;
-			killtimer=0;
-		}
-	}
-
-	//Reaper
-	if(!reaper.active)
-	{
-		++reaper_dead_timer;
-	}
-
-	//ImmunityPower
-	if(immunity_effect)
-	{
-		++immunityActiveTimer;
-		if(immunityActiveTimer>50)
-		{
-			immunity_effect=false;
-			immunityActiveTimer=0;
-		}
-	}
-}
-
-
 
 
 /*--------------------Render Background-------------------------*/
@@ -578,42 +556,12 @@ void setImmunityPower()
 }
 void respawnImmunityPower()
 {
-	int x=rand();
-	if(x%4==0)
-	{
-		immunity.x=1390+1000;
-		immunity.y=Y + rand()%200; 
-		immunity.width=85;
-		immunity.height=90;
-		immunity.active=true;
-	}
+
 }
 
 void moveImmunityPower()
 {
-	immunity.x-=50;
-	if(immunity.x<0)
-	{
-		immunity.active=false;
-		immunity.x=1390+1000;
-	}
-}
-
-void GainImmunityPower()
-{
-	if(immunity.active)
-	{
-		if ((X<immunity.x+immunity.width && X+playerWidth>immunity.x) 
-		&& ((Y+coordinatejump)<immunity.y+immunity.height
-		&& (Y+coordinatejump)+playerHeight>immunity.y))
-		{
-			
-			printf("I am immune to all harms that dare come my way!\n");
-			immunity.active=false;
-			immunity_effect=true;
-		}
-			
-    }
+	
 }
 
 
