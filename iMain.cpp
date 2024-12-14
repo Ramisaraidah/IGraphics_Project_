@@ -2,14 +2,17 @@
 #include<Windows.h>
 #include<Windows.h>
 
+
 #define screenwidth 783
 #define screenlength 1392
 
 bool run_state;
-int gameState=0;
+int gameState=-1;
+int loading=0;
 bool musicOn = true;
 int collision_number=0;
 bool char_hurt=false;
+bool important_Sounds_are_playing_coin=false;
 
 /*-----COORDINATES--------*/
 int X=350;
@@ -57,6 +60,7 @@ char enemy_sprite[3][60]={"enemy\\green_slime\\idle\\spike.bmp","enemy\\green_sl
 char reaper_run[8][25]={"enemy\\reaper-bmp\\1.bmp","enemy\\reaper-bmp\\2.bmp","enemy\\reaper-bmp\\3.bmp","enemy\\reaper-bmp\\4.bmp",
 						"enemy\\reaper-bmp\\5.bmp","enemy\\reaper-bmp\\6.bmp","enemy\\reaper-bmp\\7.bmp","enemy\\reaper-bmp\\8.bmp"};
 
+
 int reaperRunidx=0;
 
 struct Reaper {
@@ -67,7 +71,14 @@ struct Reaper {
     bool active;
 }reaper; 
 
+
 int reaper_dead_timer=0;
+int collision_time_out=0;
+int reaper_time_out=0;
+
+/*---------------Sound Effect----------------------------------------*/
+char coin_sound[40]="Accessory\\Sound_bites\\Coin_sound.wav";
+char powerup_sound[40]="Accessory\\Sound_bites\\Powerup_sound.wav";
 
 
 /*--------------------------------Coins---------------------------------*/
@@ -75,24 +86,42 @@ int reaper_dead_timer=0;
 int coinidx=0;
 int totalCoinsCollected = 0;
 int coinTime=0;
-char coin[40][35]={"Accessory\\Coins\\Bronze_1.bmp","Accessory\\Coins\\Bronze_2.bmp","Accessory\\Coins\\Bronze_3.bmp",
-					"Accessory\\Coins\\Bronze_4.bmp","Accessory\\Coins\\Bronze_5.bmp","Accessory\\Coins\\Bronze_6.bmp",
-					"Accessory\\Coins\\Bronze_7.bmp","Accessory\\Coins\\Bronze_8.bmp","Accessory\\Coins\\Bronze_9.bmp",
-					"Accessory\\Coins\\Bronze_10.bmp"};
-struct Coin {
+char coin[40][35]={"Accessory\\Coins\\Gold_1.bmp","Accessory\\Coins\\Gold_2.bmp","Accessory\\Coins\\Gold_3.bmp",
+					"Accessory\\Coins\\Gold_4.bmp","Accessory\\Coins\\Gold_5.bmp","Accessory\\Coins\\Gold_6.bmp",
+					"Accessory\\Coins\\Gold_7.bmp","Accessory\\Coins\\Gold_8.bmp","Accessory\\Coins\\Gold_9.bmp",
+					"Accessory\\Coins\\Gold_10.bmp"};
+
+struct Coin
+{
     int x;       // X-coordinate
     int y;       // Y-coordinate
     bool active; // Whether the coin is active
 };
 struct Coin coins[MAX_COINS];
 
-/*---------------- UI ------------- */
+
+
+
+/*------------------------------ UI --------------------------------- */
+char welcomepage[20]="UI\\Welcome.bmp";
 char menupage[20]={"UI\\Menu.bmp"};
+char halloffame[20]="UI\\Leaderboard.bmp";
+char how_to_play[20]="UI\\How_to_play.bmp";
+char options[20]="UI\\Options.bmp";
+char about[20]="UI\\About.bmp";
+char musicOnpic[20]="UI\\MusicOn.bmp";
+char musicOffpic[20]="UI\\MusicOff.bmp";
+char hearts[20]="UI\\Hearts.bmp";
+char coinsUI[20]="UI\\Coin.bmp";
+char text_back[20]="UI\\Background.bmp";
+char lives_back[20]="UI\\Lives_back.bmp";
+
 
 
 /*------RUN ANIMATION-----*/
 bool StandPosition = true;
 int StandCounter = 0;
+
 
 /*-----JUMP-------*/
 bool jump = false;
@@ -101,9 +130,12 @@ bool jumpdown = false;
 int jumplimit = 130;
 int coordinatejump=0;
 
+
 /*--------Attack------------*/
 bool kill=false;
 int killtimer=0;
+
+
 
 
 /*---------------POWER UPS-------------------*/
@@ -116,13 +148,26 @@ struct powerup
 	bool active;
 } immunity,doubleCoins;
 
+//Immunity powerup and effect BMP
 char cauldron[35]="Accessory\\PowerUps\\cauldron.bmp";
 char bubble[40]="Accessory\\poweup_effects\\bubble.bmp";
+
+
+//Double Coin and effect BMP
+char doublecoinpowerup[50]="Accessory\\PowerUps\\double_coins.bmp";
+char doublecoineffectpic[50]="Accessory\\poweup_effects\\double_coins_effect.bmp";
 
 //Immunity
 bool immunity_effect=false;
 int immunityActivateTimer=0;
 int immunityDeactivateTimer=0;
+
+
+//Double coins
+bool doubleCoins_effect=false;
+int doubleCoinsActivateTimer=0;
+int doubleCoinsDeactivateTimer=0;
+
 
 
 /*------OBSTACLE STRUCTURES-------*/
@@ -135,6 +180,8 @@ struct Obstacle {
 } obs1; 
 
 
+
+/*-------Background--------*/
 struct background
 {
 	int x;
@@ -144,7 +191,30 @@ struct background bc1[50];
 
 
 int bcIndex=0;
-int idleidx=0,runidx=0,jumpupidx=0,jumpdownidx=7,hurtidx=0,attackidx=0;
+int idleidx=0;
+int runidx=0;
+int jumpupidx=0;
+int jumpdownidx=7;
+int hurtidx=0;
+int attackidx=0;
+
+
+/*---------SCORE-------------*/
+int score=0;
+int second=0;
+
+
+/*----------------------LeaderBoard---------------------------------*/
+int len=0;
+char str1[100];
+bool newscore=true;
+struct hscore
+{
+	char name[50];
+	int score=0;
+}high_score[5];
+
+
 
 /*-------Introduce Functions----------*/
 
@@ -158,40 +228,151 @@ void checkCoinCollection();
 
 //Reaper
 void check_reaper_Collision();
+void move_obstacle();
+
+//Immunity
+void setImmunityPower();
+void respawnImmunityPower();
+void moveImmunityPower();
+void GainImmunityPower();
+
+
+//Double Coins
+void setDoubleCoinPower();
+void respawnDoubleCoinPower();
+void moveDoubleCoinPower();
+void GainDoubleCoinPower();
+
 
 //Timer
 void func_timers();
+
+//Leaderboard
+
+void gameover();
+void newHighscore();
+void readScore();
+void showChar();
+void resetNameInput();
+
+
+/*-----------------SCORE-------------------*/
+
+char sec[10000];
+int minute=0;
+int hour=0;
+char hr[10000];
+int totalSecond=0;
+char point[10000];
+
+
+void changeTimer()
+{
+	if(gameState==1)
+	{
+		totalSecond=(second++) +(60*minute)+(60*60*hour);
+		score=score+second;
+	}
+}
+
+void drawTimer()
+{
+	if(gameState==1)
+	{
+
+		iShowBMP2(1290-60-40,screenwidth-68,lives_back,0);
+
+		iSetColor(0,0,0);
+		sprintf(sec,"Timer: %d",second);
+		iText(1240,screenwidth-45,sec,GLUT_BITMAP_TIMES_ROMAN_24);
+
+
+		iShowBMP2(488-35,screenwidth-68,lives_back,0);
+		iSetColor(0,0,0);
+
+		sprintf(point,"Score: %d",score);
+		iText(500,screenwidth-45,point,GLUT_BITMAP_TIMES_ROMAN_24);
+	}
+}
+
+
+/*-------------------------GameOverScene---------------------------*/
+char GameOverScene[50]="Accessory\\GameState_2\\G.bmp";
+
+void gameover()
+{
+	iSetColor(128,128,128);
+	iFilledRectangle(0,0,screenwidth,screenlength);
+	iShowBMP(0,0,GameOverScene);
+	//My Restart is already in the picture 
+	gameState=2;
+}
+
+
+
+
+/**********************************GameStates*********************************/
+//gameState -1: Welcome Page
+//gameState 0 : MenuPage
+//gameState 1 : Actual Game
+//gameState 2 : Gameover
+//gameState 3 : LeaderBoard 
+//gameState 4 : How to Play
+//gameState 5 : Options
+
 
 
 /*----------------    i draw   --------------------- I DRAW --------------------------------------------*/
 void iDraw() {
 	iClear();
-	if(gameState==0 || gameState==-1)
+	if(gameState==-1)
+	{
+		iShowBMP(0,0,welcomepage);
+		loading++;
+		if(loading>60)
+		{
+			gameState=0;
+			loading=0;
+		}
+
+	}
+	else if(gameState==0)
 	{
 		iShowBMP(0,0,menupage);
-		// iText(300, 300, "Press 'UP ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
-		// iText(300, 400, "Press 'DOWN ARROW' to Start the Game.", GLUT_BITMAP_TIMES_ROMAN_24);
+		score=0;
+		totalCoinsCollected=0;
+		second=0;
+		collision_number=0;
+		immunity_effect=false;
+		doubleCoins_effect=false;
 	}
 	else if(gameState==1)
 	{
 		func_timers();
+		resetNameInput();
 		int i,k,j;
+		
+		
 		for(i=0;i<29;i++)
 		{
 			iShowBMP(bc1[i].x,bc1[i].y,back[i]);
 		}
-		if(immunity_effect)
+
+		if(immunity_effect || second<=10)
 		{
 			iShowBMP2(X-58,Y+coordinatejump,bubble,0);
 		}
-		//iShowBMP(0,0,size);
+		if(doubleCoins_effect)
+		{
+			iShowBMP2(10,screenwidth-180,doublecoineffectpic,0);
+		}
 		iText(1, 1000, "Score: ", GLUT_BITMAP_HELVETICA_12);
 		if(jump)
 		{
 			if(kill)
 			{	
 				iShowBMP2(X,Y+coordinatejump,attack[attackidx],0);
-				printf("I attack, you die.\n");
+				//printf("I attack, you die.\n");
 			}
 			else
 			{
@@ -209,22 +390,22 @@ void iDraw() {
 		}
 		else if(char_hurt)
 		{
-			printf("I am hurt. Show me hurting!!!\n");
+			//printf("I am hurt. Show me hurting!!!\n");
 			iShowBMP2(X,Y,hurt[hurtidx],0);
 		}
 		else if(kill)
 		{
 			iShowBMP2(X,Y,attack[attackidx],0);
-			printf("I attack, you die.\n");
+			//printf("I attack, you die.\n");
 		}
 		else
 		{
-			if(!StandPosition)
+			if(!StandPosition || second>=4)
 			{
 				if(kill)
 				{	
 					iShowBMP2(X,Y,attack[attackidx],0);
-					printf("I attack, you die.\n");
+					//printf("I attack, you die.\n");
 				}
 				else
 				{
@@ -232,12 +413,12 @@ void iDraw() {
 					iShowBMP2(X,Y,run[runidx],0);
 				}
 			}
-			else
+			else if(second<4)
 			{
 				if(kill)
 				{	
 					iShowBMP2(X,Y,attack[attackidx],0);
-					printf("I attack, you die.\n");
+					//printf("I attack, you die.\n");
 				}
 				else
 				{
@@ -247,21 +428,38 @@ void iDraw() {
 					
 			}
 		}
-		if(obs1.active)
+		if(reaper.x!=obs1.obs_x)
 		{
-			iShowBMP2(obs1.obs_x,obs1.obs_y,enemy_sprite[0],0);
+			if(reaper.active)
+			{
+				iShowBMP2(reaper.x,reaper.y,reaper_run[reaperRunidx],16777215);
+			}
+			if(obs1.active)
+			{
+				iShowBMP2(obs1.obs_x,obs1.obs_y,enemy_sprite[0],0);
+			}
 		}
-		if(reaper.active)
+		
+		if(immunity.active)
 		{
-			iShowBMP2(reaper.x,reaper.y,reaper_run[reaperRunidx],16777215);
+			//printf("Show me cauldron\n");
+			iShowBMP2(immunity.x,immunity.y,cauldron,0);
+		}
+		if(doubleCoins.active)
+		{
+			//printf("Show me double coins\n");
+			iShowBMP2(doubleCoins.x,doubleCoins.y,doublecoinpowerup,0);
 		}
 
 		drawCoins();
+		drawTimer();
 
         // Display Total Coins Collected
         char coinText[50];
-        sprintf(coinText, "Coins Collected: %d", totalCoinsCollected);
-        iText(10, screenwidth - 20, coinText, GLUT_BITMAP_HELVETICA_18);
+        sprintf(coinText, "%d", totalCoinsCollected);
+		iShowBMP2(0,screenwidth-68,lives_back,0);
+        iText(10+50+10+15, screenwidth -40-5, coinText, GLUT_BITMAP_HELVETICA_18);
+		iShowBMP2(10,screenwidth-40-20,coinsUI,0);
 
         // Check for coin collection
         checkCoinCollection();
@@ -269,9 +467,66 @@ void iDraw() {
 
 		char collisionText[50];
         sprintf(collisionText, "	Lives remaing: %d", 3-collision_number);
-        iText(900, screenwidth - 20, collisionText, GLUT_BITMAP_HELVETICA_18);
+		iShowBMP2(900-10-7-5,screenwidth-68,lives_back,0);
+        iText(900, screenwidth -45, collisionText, GLUT_BITMAP_HELVETICA_18);
+		if((3-collision_number)==3)
+		{
+			iShowBMP2(900,screenwidth-30-40-30,hearts,0);
+			iShowBMP2(950,screenwidth-30-40-30,hearts,0);
+			iShowBMP2(1000,screenwidth-30-40-30,hearts,0);
+		}
+		else if((3-collision_number)==2)
+		{
+			iShowBMP2(900,screenwidth-30-40-30,hearts,0);
+			iShowBMP2(950,screenwidth-30-40-30,hearts,0);
+		}
+		else if((3-collision_number)==1)
+		{
+			iShowBMP2(900,screenwidth-30-40-30,hearts,0);
+		}
+		
+		GainImmunityPower();
+		GainDoubleCoinPower();
+		check_reaper_Collision();
+		move_obstacle();
 		checkCollision();
-		check_reaper_Collision();	
+	}
+
+	//Gameover Scene
+	else if(gameState==2)
+	{
+		//printf(" Score: %d",score);
+		gameover();
+		showChar();
+	}
+
+	//Leaderboard
+	else if(gameState==3)
+	{
+		iShowBMP(0,0,halloffame);
+		readScore();
+	}
+
+	//How to play
+	else if(gameState==4)
+	{
+		//iText(0,screenwidth-100,"Show how to play",GLUT_BITMAP_HELVETICA_18);
+		iShowBMP(0,0,how_to_play);
+	}
+	
+	//Options
+	else if(gameState==5)
+	{
+		//iText(0,screenwidth-100,"Show Utility Options",GLUT_BITMAP_HELVETICA_18);
+		iShowBMP(0,0,options);
+		if(musicOn)
+		{
+			iShowBMP2(screenlength/2-120,screenwidth/2-100,musicOnpic,0);
+		}
+		else
+		{
+			iShowBMP2(screenlength/2-120,screenwidth/2-100,musicOffpic,0);
+		}
 	}
 	
 }
@@ -293,6 +548,7 @@ void func_timers()
 			}
 		}
 
+
 	//Reaper
 		if(!reaper.active)
 		{
@@ -300,16 +556,38 @@ void func_timers()
 		}
 
 
+
 	//Immunity timer
 	if(immunity_effect)
 	{
 		++immunityActivateTimer;
-		if(immunityActivateTimer>50)
+		if(immunityActivateTimer>200)
 		{
 			immunity_effect=false;
 			immunityActivateTimer=0;
 		}
 	}
+
+
+	//double coins
+	if(doubleCoins_effect)
+	{
+		++doubleCoinsActivateTimer;
+		if(doubleCoinsActivateTimer>200)
+		{
+			doubleCoins_effect=false;
+			doubleCoinsActivateTimer=0;
+		}
+	}
+
+
+	if(!obs1.active)
+	{
+		++collision_time_out;
+	}
+
+	
+
 }
 
 /*--------------------Render Background-------------------------*/
@@ -334,15 +612,21 @@ void change()
 			bc1[i].x=1392-48;
 		}
 	}
+	
 	}
 }
 void jumping()
 {
 	if(jump)
 	{
+		if(musicOn)
+		{
+			//PlaySound(TEXT("Accessory\\Sound_bites\\Jump_sound.wav"),NULL,SND_FILENAME|SND_ASYNC);
+		}
+		
 		if(jumpup)
 		{
-			coordinatejump+=5;
+			coordinatejump+=10;
 			if(coordinatejump>=jumplimit)
 			{
 				jumpup=false;
@@ -351,7 +635,7 @@ void jumping()
 		else
 		{
 			jumpdown=true;
-			coordinatejump-=5;
+			coordinatejump-=10;
 			if(coordinatejump<0)
 			{
 				jump=false;
@@ -375,12 +659,13 @@ void set_obstacle()
 void generate_obstacle()
 {
 	int x=rand()%2;
-	if(x==1){
+	if(x==1 && collision_time_out>50){
 		obs1.active=true;
+		collision_time_out=0;
 		//printf("Collision Active!!\n");
 	}
 }
-void move_obsctacle()
+void move_obstacle()
 {
 	obs1.obs_x-=30;
 	if(obs1.obs_x<0)
@@ -392,29 +677,36 @@ void move_obsctacle()
 }
 void checkCollision()
 {
-	if (obs1.active) 
+	if (obs1.active && second>10) 
 	{
 		//printf("Entered checkCollsion\n");
         if ((X<obs1.obs_x+obs1.obs_width && X+playerWidth>obs1.obs_x ) 
 		&& ((Y+coordinatejump)<obs1.obs_y+obs1.obs_height
-		 && (Y+coordinatejump)+playerHeight>obs1.obs_y))
+		 && (Y+coordinatejump)+playerHeight>obs1.obs_y)  && !immunity_effect)
 		{
-			printf("Collision detected!\n");
+			//printf("Collision detected!\n");
 			obs1.active=false;
 			++collision_number;
+			if(musicOn)
+			{
+				PlaySound(TEXT("Accessory\\Sound_bites\\Collision_sound.wav"),NULL,SND_FILENAME|SND_ASYNC);
+			}
+			
 			char_hurt=true;
 			if(char_hurt)
 			{
-				printf("Initiate hurt anim\n");
+				//printf("Initiate hurt anim\n");
 			}
-			printf("Collision no: %d\n",collision_number);
+			//printf("Collision no: %d\n",collision_number);
            	//gameState = 0;
 			if(collision_number> 3)
 			{	
-				gameState=0;
+				gameState=2;
 				collision_number=0;
+				//score=0;
+				//second=0;
 			}
-			printf("Collision detected!\n");
+			//printf("Collision detected!\n");
         }
     }
 	//generate_obstacle();
@@ -436,7 +728,7 @@ void generate_reaper()
 {
 	int x=rand()%2;
 	if(x==1){
-		if(reaper_dead_timer>30)
+		if(reaper_dead_timer>50)
 		{
 			reaper.active=true;
 			reaper.width=190;
@@ -466,42 +758,57 @@ void check_reaper_Collision()
 		reaper.width=190;
 		reaper.height=235;
 		//printf("Entered checkCollsion\n");
-		if(abs(X-reaper.x)<50)
+		if((reaper.x-X)<150)
 		{
 			if(kill)
 			{
 				reaper.active=false;
 				kill=false;
+				if(musicOn)
+				{
+					PlaySound(TEXT("Accessory\\Sound_bites\\Attack_sound.wav"),NULL,SND_FILENAME|SND_ASYNC);
+				}
+				
 
 			}
 		}
         if ((X<reaper.x+reaper.width && X+playerWidth>reaper.x) 
 		&& ((Y+coordinatejump)<reaper.y+reaper.height
-		&& (Y+coordinatejump)+playerHeight>reaper.y))
+		&& (Y+coordinatejump)+playerHeight>reaper.y) && !immunity_effect)
 		{
 			if(kill)
 			{
 				reaper.active=false;
 				kill=false;
+				if(musicOn)
+				{
+					PlaySound(TEXT("Accessory\\Sound_bites\\Attack_sound.wav"),NULL,SND_FILENAME|SND_ASYNC);
+				}
+				
 			}
-			else
+			else if(second>10)
 			{
-				printf("Reaper detected!\n");
+				//printf("Reaper detected!\n");
 				reaper.active=false;
 				++collision_number;
+				if(musicOn)
+				{
+					PlaySound(TEXT("Accessory\\Sound_bites\\Collision_sound.wav"),NULL,SND_FILENAME|SND_ASYNC);
+				}
 				char_hurt=true;
 				if(char_hurt)
 				{
-					printf("Initiate hurt anim\n");
+					//printf("Initiate hurt anim\n");
 				}
-				printf("Collision no: %d\n",collision_number);
+				//printf("Collision no: %d\n",collision_number);
 				//gameState = 0;
 				if(collision_number> 3)
 				{	
-					gameState=0;
+					gameState=2;
 					collision_number=0;
+					
 				}
-				printf("Collision detected!\n");
+				//printf("Collision detected!\n");
 			}
 			
         }
@@ -512,18 +819,22 @@ void check_reaper_Collision()
 
 
 /*-------------------------Coin Collection------------------------*/
-void initializeCoins() {
-    for (int i = 0; i < MAX_COINS; i++) {
+void SetCoins() {
+    for (int i = 0; i < MAX_COINS; i++) 
+	{
         coins[i].x = screenlength + rand() % 400;;  
         coins[i].y = Y + rand()%200; 
         coins[i].active = true;
     }
 }
 void moveCoins() {
-    for (int i = 0; i < MAX_COINS; i++) {
-        if (coins[i].active) {
+    for (int i = 0; i < MAX_COINS; i++) 
+	{
+        if (coins[i].active) 
+		{
             coins[i].x -= 30; 
-            if (coins[i].x < 0) {
+            if (coins[i].x < 0) 
+			{
                 coins[i].x = screenlength + rand() % 200; 
                 coins[i].y = Y;
             }
@@ -538,6 +849,14 @@ void checkCoinCollection() {
 			&& (Y+coordinatejump) < coins[i].y + 30) {
                 coins[i].active = false; 
                 totalCoinsCollected++; 
+				if(doubleCoins_effect)
+				{
+					totalCoinsCollected++;
+				}
+				if(musicOn & !important_Sounds_are_playing_coin)
+				{
+					PlaySound(TEXT("Accessory\\Sound_bites\\Coin_sound.wav"),NULL,SND_FILENAME|SND_ASYNC);
+				}
                 //printf("Coin collected at (%d, %d)! Total: %d\n", coins[i].x, coins[i].y, totalCoinsCollected);
             }
         }
@@ -547,6 +866,8 @@ void checkCoinCollection() {
 		}
 		respawnCoins();
     }
+
+	score=second+totalCoinsCollected;
 }
 void respawnCoins() {
 	
@@ -570,6 +891,8 @@ void drawCoins() {
 
 
 /*-------------PowerUp functions------------*/
+
+//No one can hurt me now!
 void setImmunityPower()
 {
 	immunity.x=1390+1000;
@@ -609,11 +932,217 @@ void GainImmunityPower()
 		&& (Y+coordinatejump)+playerHeight>immunity.y))
 		{
 			
-				printf("I am immune!\n");
+				//printf("I am immune!\n");
 				immunity.active=false;
-				immunity_effect=true;			
+				immunity_effect=true;
+				
+				if(musicOn)
+				{
+					important_Sounds_are_playing_coin=true;
+					PlaySound(TEXT("Accessory\\Sound_bites\\Powerup_sound.wav"),NULL,SND_FILENAME|SND_ASYNC);
+				}	
+				important_Sounds_are_playing_coin=false;
+
         }
 }
+
+
+//Double your beautiful, shiny Coins
+void setDoubleCoinPower()
+{
+	doubleCoins.x=1390+1000;
+	doubleCoins.y=Y + rand()%200; 
+	doubleCoins.width=146;
+	doubleCoins.height=130;
+	doubleCoins.active=true;
+}
+void respawnDoubleCoinPower()
+{
+	int x=rand()%4;
+	if(x==1)
+	{
+		
+	doubleCoins.x=1390+1000;
+	doubleCoins.y=Y + rand()%200; 
+	doubleCoins.width=146;
+	doubleCoins.height=130;
+	doubleCoins.active=true;	
+		
+	}
+}
+
+void moveDoubleCoinPower()
+{
+	doubleCoins.x-=50;
+	if(doubleCoins.x<0)
+	{
+		doubleCoins.active=false;
+		doubleCoins.x=1390+1000;
+	}
+}
+void GainDoubleCoinPower()
+{
+	if ((X<doubleCoins.x+doubleCoins.width && X+playerWidth>doubleCoins.x) 
+		&& ((Y+coordinatejump)<doubleCoins.y+doubleCoins.height
+		&& (Y+coordinatejump)+playerHeight>doubleCoins.y))
+		{
+			
+				//printf("I am double!\n");
+				doubleCoins.active=false;
+				doubleCoins_effect=true;
+				
+				if(musicOn)
+				{
+					important_Sounds_are_playing_coin=true;
+					PlaySound(TEXT("Accessory\\Sound_bites\\Powerup_sound.wav"),NULL,SND_FILENAME|SND_ASYNC);
+				}	
+				important_Sounds_are_playing_coin=false;
+
+        }
+}
+
+
+
+
+
+
+/*--------------------LeaderBoard----------------------------------------------*/
+
+
+void readScore() {
+    FILE *fp = fopen("Score.txt", "r");
+    if (fp == NULL) {
+        printf("The file can't be found! We lost our legends. Sad.\n");
+        return; 
+    }
+
+    
+    for (int i = 0; i < 5; i++) {
+        int res = fscanf(fp, "%s %d", high_score[i].name, &high_score[i].score);
+        if (res != 2) { 
+            printf("Invalid data format at line %d in Score.txt. Fix it please.\n", i + 1);
+            fclose(fp); 
+            return;
+        }
+    }
+
+    fclose(fp); 
+
+   
+    for (int i = 0; i < 5; i++) 
+	{
+        char showName[50];
+        char showScore[10];
+        
+        sprintf(showName, "%s", high_score[i].name);
+        sprintf(showScore, "%d", high_score[i].score);
+        
+        iSetColor(255, 255, 255); 
+		iText(550, 590,"NAME", GLUT_BITMAP_HELVETICA_18); 
+        iText(800, 590,"SCORE", GLUT_BITMAP_HELVETICA_18);
+        iText(550, 550 - 50 * i, showName, GLUT_BITMAP_HELVETICA_18); 
+        iText(800, 550 - 50 * i, showScore, GLUT_BITMAP_HELVETICA_18); 
+    }
+}
+
+
+
+
+void newHighscore() 
+{
+    FILE *fp;
+    fp = fopen("Score.txt", "r");
+
+    for (int i = 0; i < 5; i++) 
+	{
+        fscanf(fp, "%s %d", high_score[i].name, &high_score[i].score);
+    }
+    fclose(fp);
+
+    if (newscore) 
+	{
+        for (int i = 0; i < 5; i++) 
+		{
+            if (high_score[i].score < score)
+			 {
+              
+                high_score[4].score = score;
+                strcpy(high_score[4].name, str1);
+
+                for (int j = 0; j < 5; j++) 
+				{
+                    for (int k = 4; k > j; k--) 
+					{
+                        if (high_score[k].score > high_score[k - 1].score) 
+						{
+							//score
+                            int tempScore = high_score[k - 1].score;
+                            high_score[k - 1].score = high_score[k].score;
+                            high_score[k].score = tempScore;
+
+							//name
+                            char tempName[50];
+                            strcpy(tempName, high_score[k - 1].name);
+                            strcpy(high_score[k - 1].name, high_score[k].name);
+                            strcpy(high_score[k].name, tempName);
+                        }
+                    }
+                }
+
+                fp = fopen("Score.txt", "w");
+
+                for (int i = 0; i < 5; i++) 
+				{
+                    fprintf(fp, "%s %d\n", high_score[i].name, high_score[i].score);
+                }
+                fclose(fp);
+
+                newscore = false; 
+                break;
+            }
+        }
+    }
+}
+
+
+void showChar()
+{
+	iSetColor(0,0,0);
+	// iText(400,500,"Enter your Name: ",GLUT_BITMAP_HELVETICA_18);
+	// iRectangle(495,450,160,30);
+	iText(screenlength/2-100+50,460,str1,GLUT_BITMAP_HELVETICA_18);    
+}
+
+void takeInput(unsigned char key)
+{
+    if (key == '\b') 
+	{ 	
+        if (len > 0) 
+		{
+            len--;
+            str1[len] = '\0'; 
+        }
+    }
+	else if (key == '\r')  //Press Enter to go to Menu Page
+	{
+        newHighscore(); 
+        gameState = 0;
+    }
+	else if (len < 29 && key != '\b' && key != '\r')
+	{ 
+        str1[len] = key;
+        len++;
+        str1[len] = '\0'; 
+    }
+}
+
+// To reset names especially when they're not included in the highscores chart
+void resetNameInput()
+{
+    str1[0] = '\0';  
+    len = 0;        
+}
+
 
 
 /*
@@ -626,50 +1155,123 @@ void iMouseMove(int mx, int my) {
 
 }
 
+
 /*
 	function iMouse() is called when the user presses/releases the mouse.
 	(mx, my) is the position where the mouse pointer is.
 	*/
 void iMouse(int button, int state, int mx, int my) {
-	//printf("x=%d y=%d\n",mx,my);
+	printf("x=%d y=%d\n",mx,my);
 	//printf("%d\n",gameState);
-	if(gameState==0)
+	if(gameState==0)    //Menu
 	{
-		if(mx>=500 && mx<=893 && my>=521 && my<=574)
+		//PLAY BUTTON
+		if(mx>=494 && mx<=891 && my>=(screenwidth-230) && my<=(screenwidth-162))
 		{
 			//printf("I'm here!!! Let me in!!\n");
 			gameState=1;
 		}
+		//LEADERBOARD PAGE
+		else if(mx>=460 && mx<=920 && my>=(screenwidth-333) && my<=(screenwidth-266))
+		{
+			//printf("Let's meet the legends!!\n");
+			gameState=3;
+		}
+		//How to play page
+		else if(mx>=471 && mx<=916 && my>=(screenwidth-449) && my<=(screenwidth-379))
+		{
+			//printf("How to play\n");
+			gameState=4;
+		}
+		//Options page
+		else if(mx>=496 && mx<=882 && my>=(screenwidth-551) && my<=(screenwidth-492))
+		{
+			//printf("Options!!\n");
+			gameState=5;
+		}
+
+
 	}
 
-	if(gameState==1)
+	if(gameState==1)  //Game
 	{
-		printf("X=%d, Y=%d, playerwidth=%d, Playerheight=%d\n Coordinate jump=%d\n",X,Y,playerWidth,playerHeight,coordinatejump);
-		printf("reaper.x=%d, reaper.y=%d, reaperwidth=%d, reaperheight=%d\n",reaper.x,reaper.y,reaper.width,reaper.height);
+		//printf("X=%d, Y=%d, playerwidth=%d, Playerheight=%d\n Coordinate jump=%d\n",X,Y,playerWidth,playerHeight,coordinatejump);
+		//printf("reaper.x=%d, reaper.y=%d, reaperwidth=%d, reaperheight=%d\n",reaper.x,reaper.y,reaper.width,reaper.height);
+	}
+	if(gameState==2)    //Gameover
+	{
+		if(mx>=464 && mx<=944 && my>=(screenwidth-713) && my<=(screenwidth-651))
+		{
+			//printf("Let's Go back to Menu\n");
+			gameState=0;
+		}
+	}
+	if(gameState==3)    //leaderboard
+	{
+		if(mx>=461 && mx<=884 && my>=(screenwidth-629) && my<=(screenwidth-573))
+		{
+			gameState=0;
+		}
+	}
+	if(gameState==4)    // how to play
+	{
+		if(mx>=461 && mx<=884 && my>=(screenwidth-629) && my<=(screenwidth-573))
+		{
+			gameState=0;
+		}
+	}
+	if(gameState==5)   //options
+	{
+		if(mx>=461 && mx<=884 && my>=(screenwidth-629) && my<=(screenwidth-573))
+		{
+			gameState=0;
+		}
+		if(mx>=446 && mx<=633 && my>=(screenwidth-372) && my<=(screenwidth-229))
+		{
+			musicOn=true;
+		}
+		if(mx>=729 && mx<=904 && my>=(screenwidth-372) && my<=(screenwidth-229))
+		{
+			musicOn=false;
+		}
+	}
+	if(gameState==6)  //About page
+	{
+		if(mx>=461 && mx<=884 && my>=(screenwidth-629) && my<=(screenwidth-573))
+		{
+			gameState=0;
+		}
 	}
 	
 }
+
 
 /*
 	function iKeyboard() is called whenever the user hits a key in keyboard.
 	key- holds the ASCII value of the key pressed.
 	*/
 void iKeyboard(unsigned char key) {
-	if(key==' ')
-	{
-		if(!jump)
-		{
-			jump=true;
-			jumpup=true;
-		}
-	}
-	if(key=='k' || key=='K')
-	{
-		kill=true;
-		printf("I am ready to kill\n");
-	}
-	
+    if (key == ' ') {
+        if (!jump) {
+            jump = true;
+            jumpup = true;
+        }
+    }
+    if (key == 'k' || key == 'K') {
+        kill = true;
+        //printf("I am ready to kill\n");
+    }
+    if (gameState == 0) {
+        if (key == 'L' || key == 'l') {
+            gameState = 3; // Correctly update gameState to 3
+        }
+    }
+    if (gameState == 2) {
+
+            takeInput(key); // Allow input handling in gameState 2
+    }
 }
+
 
 /*
 	function iSpecialKeyboard() is called whenver user hits special keys like-
@@ -702,27 +1304,46 @@ void iSpecialKeyboard(unsigned char key) {
 void char_animations()
 {
 	
-		idleidx++;
-		if(idleidx>=6) 
-			idleidx=0;
+	idleidx++;
+	if(idleidx>=6) 
+		idleidx=0;
 
 	
-		runidx++;
-		if(runidx>=8)
-			runidx=0;
+	runidx++;
+	if(runidx>=8)
+		runidx=0;
 	
 	
-		jumpupidx++;
-		if(jumpupidx>=6)
-			jumpupidx=5;
+	jumpupidx++;
+	if(jumpupidx>=6)
+		jumpupidx=5;
 	
 	
-		jumpdownidx++;
-		if(jumpdownidx>=11)
-			jumpdownidx=10;
+	jumpdownidx++;
+	if(jumpdownidx>=11)
+		jumpdownidx=10;
 	
 	
-		if(char_hurt)
+		
+	
+	attackidx++;
+	if(attackidx>=10)
+		attackidx=0;
+
+
+
+	/*-----------Reaper-----------*/
+	reaperRunidx++;
+	if(reaperRunidx>=7)
+		reaperRunidx=0;
+
+
+}
+
+//Hurt_anim_ for character!!!
+void hurt_anim()
+{
+	if(char_hurt)
 		{
 			hurtidx++;
 			if(hurtidx>=3)
@@ -731,17 +1352,6 @@ void char_animations()
 				char_hurt=false;
 			}
 		}
-	
-		attackidx++;
-		if(attackidx>=10)
-			attackidx=0;
-
-
-
-		/*-----------Reaper-----------*/
-		reaperRunidx++;
-		if(reaperRunidx>=7)
-			reaperRunidx=0;
 }
 
 
@@ -755,36 +1365,57 @@ void generate_barriers()
 {
 	generate_obstacle();
 	generate_reaper();
+	char_animations();
+	
 }
-void move_barriers()
+void generate_powerup()
 {
-	move_obsctacle();
-	move_reaper();
+	respawnImmunityPower();         //respawn them
+	respawnDoubleCoinPower();
 }
 
-char musicfile[100]="Resouces\\music\\nightfall-future-bass-music-228100.wav";
-char musicfiles[100]="Resouces\\music\\nightfall-future-bass-music-228100.wav";
+void allcoin()
+{
+	coin_anim();
+	moveCoins();
+	respawnCoins();
+}
+void move_powerups()
+{
+	
+	moveImmunityPower();         
+	moveDoubleCoinPower();
+}
+
+
+
 int main() {
 	srand(0);
 	setAll();
 	set_obstacle();
-	
 	set_Reaper();
-	iSetTimer(300,generate_barriers);
-	iSetTimer(100,move_barriers);
+
+	//Powerups setup
+	setImmunityPower();
+	setDoubleCoinPower();
+
+	iSetTimer(100,generate_barriers);     
+	iSetTimer(300,generate_powerup);
+	iSetTimer(100,move_powerups);      //call them in int main
+	iSetTimer(500,hurt_anim);
+	iSetTimer(100,change);  
+	
+	iSetTimer((100),move_reaper);
+
+	iSetTimer(1000,changeTimer); 
+	
+	iSetTimer(5,jumping); 
+
+	//Coins
+	SetCoins();
+	iSetTimer(100,allcoin); 
 
 
-	if(musicOn)
-	{
-		//PlaySound(musicfiles,NULL,SND_LOOP|SND_ASYNC);
-	}
-	iSetTimer(100,change);
-	iSetTimer(100,coin_anim);
-	iSetTimer(100,char_animations);
-	iSetTimer(5,jumping);
-	initializeCoins();
-	iSetTimer(100, moveCoins);        
-    iSetTimer(100, respawnCoins);
 	iInitialize(screenlength,screenwidth, "Spooky Sprints");
 	return 0;
 }
