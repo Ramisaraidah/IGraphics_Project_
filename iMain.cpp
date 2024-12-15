@@ -351,7 +351,7 @@ void iDraw() {
 		func_timers();
 		resetNameInput();
 		int i,k,j;
-		
+		newscore=true;
 		
 		for(i=0;i<29;i++)
 		{
@@ -495,9 +495,10 @@ void iDraw() {
 	//Gameover Scene
 	else if(gameState==2)
 	{
-		//printf(" Score: %d",score);
+		printf(" Score: %d",score);
 		gameover();
 		showChar();
+		
 	}
 
 	//Leaderboard
@@ -1011,6 +1012,7 @@ void GainDoubleCoinPower()
 
 void readScore() {
     FILE *fp = fopen("Score.txt", "r");
+	fseek(fp,0,SEEK_SET);
     if (fp == NULL) {
         printf("The file can't be found! We lost our legends. Sad.\n");
         return; 
@@ -1052,11 +1054,13 @@ void newHighscore()
 {
     FILE *fp;
     fp = fopen("Score.txt", "r");
-
+	fseek(fp,0,SEEK_SET);
     for (int i = 0; i < 5; i++) 
 	{
         fscanf(fp, "%s %d", high_score[i].name, &high_score[i].score);
+
     }
+	fseek(fp,0,SEEK_SET);
     fclose(fp);
 
     if (newscore) 
@@ -1161,7 +1165,7 @@ void iMouseMove(int mx, int my) {
 	(mx, my) is the position where the mouse pointer is.
 	*/
 void iMouse(int button, int state, int mx, int my) {
-	printf("x=%d y=%d\n",mx,my);
+	//printf("x=%d y=%d\n",mx,my);
 	//printf("%d\n",gameState);
 	if(gameState==0)    //Menu
 	{
@@ -1360,7 +1364,6 @@ void coin_anim()
 	coinidx++;
 	if(coinidx>=8) coinidx=0;
 }
-
 void generate_barriers()
 {
 	generate_obstacle();
@@ -1373,7 +1376,6 @@ void generate_powerup()
 	respawnImmunityPower();         //respawn them
 	respawnDoubleCoinPower();
 }
-
 void allcoin()
 {
 	coin_anim();
@@ -1386,8 +1388,6 @@ void move_powerups()
 	moveImmunityPower();         
 	moveDoubleCoinPower();
 }
-
-
 
 int main() {
 	srand(0);
