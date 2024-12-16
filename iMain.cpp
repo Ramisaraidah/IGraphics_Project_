@@ -1,6 +1,8 @@
 # include "iGraphics.h"
 #include<Windows.h>
 #include<Windows.h>
+#include<time.h>
+#include<stdlib.h>
 
 
 #define screenwidth 783
@@ -1390,7 +1392,7 @@ void move_powerups()
 }
 
 int main() {
-	srand(0);
+	srand(time(0));
 	setAll();
 	set_obstacle();
 	set_Reaper();
